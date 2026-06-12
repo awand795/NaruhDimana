@@ -18,7 +18,7 @@ class NotificationService {
 
   static const int _notificationIdBase = 1000;
 
-  Future<void> initialize() async {
+  Future<void> initialize({Function(int itemId)? onNotificationTap}) async {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -28,12 +28,16 @@ class NotificationService {
 
     await _notifications.initialize(
       settings: initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTap,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        final payload = response.payload;
+        if (payload != null && payload.isNotEmpty) {
+          final itemId = int.tryParse(payload);
+          if (itemId != null && onNotificationTap != null) {
+            onNotificationTap(itemId);
+          }
+        }
+      },
     );
-  }
-
-  void _onNotificationTap(NotificationResponse response) {
-    // Payload handling is done in main.dart via the global navigator key
   }
 
   Future<bool> requestPermission() async {

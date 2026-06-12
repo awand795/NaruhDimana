@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'core/theme.dart';
 import 'core/constants.dart';
 import 'core/router.dart';
@@ -32,34 +34,26 @@ void main() async {
     ),
   );
 
-  // Initialize notification service
-  final notificationService = NotificationService();
-  await notificationService.initialize();
+  // Initialize timezone
+  final timeZoneName = await FlutterTimezone.getLocalTimezone();
+  tz_data.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation(timeZoneName));
 
-  // Setup notification tap handler - pass navigation callback to service
-  final notificationPlugin = FlutterLocalNotificationsPlugin();
-  await notificationPlugin.initialize(
-    settings: const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-    ),
-    onDidReceiveNotificationResponse: (NotificationResponse response) {
-      final payload = response.payload;
-      if (payload != null && payload.isNotEmpty) {
-        final itemId = int.tryParse(payload);
-        if (itemId != null) {
-          navigatorKey.currentState?.pushNamed(
-            AppRoutes.detailItem,
-            arguments: Item(
-              id: itemId,
-              name: '',
-              location: '',
-              category: 'lainnya',
-              createdAt: DateTime.now().toIso8601String(),
-              updatedAt: DateTime.now().toIso8601String(),
-            ),
-          );
-        }
-      }
+  // Initialize notification service with navigation callback
+  final notificationService = NotificationService();
+  await notificationService.initialize(
+    onNotificationTap: (itemId) {
+      navigatorKey.currentState?.pushNamed(
+        AppRoutes.detailItem,
+        arguments: Item(
+          id: itemId,
+          name: '',
+          location: '',
+          category: 'lainnya',
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+        ),
+      );
     },
   );
 
