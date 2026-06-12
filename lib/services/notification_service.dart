@@ -11,13 +11,11 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
-  // Notification channel ID and name for the app
   static const String _channelId = 'naruh_dimana_reminders';
   static const String _channelName = 'Pengingat Barang';
   static const String _channelDescription =
       'Notifikasi pengingat untuk barang-barang Anda';
 
-  // Notification ID base for reminders (use item ID + offset to avoid conflicts)
   static const int _notificationIdBase = 1000;
 
   Future<void> initialize() async {
@@ -29,14 +27,13 @@ class NotificationService {
     );
 
     await _notifications.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
   }
 
   void _onNotificationTap(NotificationResponse response) {
-    // Handle notification tap - payload contains item ID
-    // The main app will handle navigation based on the payload
+    // Payload handling is done in main.dart via the global navigator key
   }
 
   Future<bool> requestPermission() async {
@@ -52,10 +49,8 @@ class NotificationService {
     final reminderDt = DateTime.tryParse(item.reminderTime!);
     if (reminderDt == null) return;
 
-    // Don't schedule if the time is in the past
     if (reminderDt.isBefore(DateTime.now())) return;
 
-    // Convert to TZDateTime for zoned scheduling
     final tzLocation = tz.local;
     final reminderTime = tz.TZDateTime.from(reminderDt, tzLocation);
 
@@ -93,14 +88,12 @@ class NotificationService {
     }
 
     await _notifications.zonedSchedule(
-      notificationId,
-      item.name,
-      'Di mana? → ${item.location}',
-      reminderTime,
-      details,
+      id: notificationId,
+      title: item.name,
+      body: 'Di mana? → ${item.location}',
+      scheduledDate: reminderTime,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: repeatInterval != null
           ? (repeatInterval == RepeatInterval.daily
               ? DateTimeComponents.time
@@ -112,7 +105,7 @@ class NotificationService {
 
   Future<void> cancelNotification(int itemId) async {
     final notificationId = _notificationIdBase + itemId;
-    await _notifications.cancel(notificationId);
+    await _notifications.cancel(id: notificationId);
   }
 
   Future<void> cancelAllNotifications() async {
@@ -138,10 +131,10 @@ class NotificationService {
     final notificationId = _notificationIdBase + (item.id ?? 0);
 
     await _notifications.show(
-      notificationId,
-      item.name,
-      'Di mana? → ${item.location}',
-      details,
+      id: notificationId,
+      title: item.name,
+      body: 'Di mana? → ${item.location}',
+      notificationDetails: details,
       payload: item.id.toString(),
     );
   }

@@ -36,27 +36,29 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
 
-  // Setup notification tap handler
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  await flutterLocalNotificationsPlugin.initialize(
-    const InitializationSettings(
+  // Setup notification tap handler - pass navigation callback to service
+  final notificationPlugin = FlutterLocalNotificationsPlugin();
+  await notificationPlugin.initialize(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     ),
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       final payload = response.payload;
-      if (payload != null) {
-        // Navigate to the detail screen
-        navigatorKey.currentState?.pushNamed(
-          AppRoutes.detailItem,
-          arguments: Item(
-            id: int.tryParse(payload) ?? 0,
-            name: '',
-            location: '',
-            category: 'lainnya',
-            createdAt: DateTime.now().toIso8601String(),
-            updatedAt: DateTime.now().toIso8601String(),
-          ),
-        );
+      if (payload != null && payload.isNotEmpty) {
+        final itemId = int.tryParse(payload);
+        if (itemId != null) {
+          navigatorKey.currentState?.pushNamed(
+            AppRoutes.detailItem,
+            arguments: Item(
+              id: itemId,
+              name: '',
+              location: '',
+              category: 'lainnya',
+              createdAt: DateTime.now().toIso8601String(),
+              updatedAt: DateTime.now().toIso8601String(),
+            ),
+          );
+        }
       }
     },
   );
