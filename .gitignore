@@ -50,6 +50,13 @@ android/app/*.jks
 android/app/*.keystore
 *.jks
 
+# Unused Flutter platform folders (Android-only app)
+/ios/
+/web/
+/linux/
+/macos/
+/windows/
+
 # IDE
 .vscode/
 
