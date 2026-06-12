@@ -87,6 +87,10 @@ class NaruhDimanaApp extends StatelessWidget {
       ],
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case AppRoutes.splash:
+            return MaterialPageRoute(
+              builder: (_) => const _SplashScreen(),
+            );
           case AppRoutes.onboarding:
             return MaterialPageRoute(
               builder: (_) => const OnboardingScreen(),
@@ -116,11 +120,11 @@ class NaruhDimanaApp extends StatelessWidget {
             );
           default:
             return MaterialPageRoute(
-              builder: (_) => const _SplashScreen(),
+              builder: (_) => const AppShell(),
             );
         }
       },
-      home: const _SplashScreen(),
+      initialRoute: AppRoutes.splash,
     );
   }
 }
