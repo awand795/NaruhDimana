@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme.dart';
 import '../../core/router.dart';
 import 'widgets/summary_chips.dart';
@@ -14,8 +16,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isFabVisible = true;
 
@@ -67,7 +68,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   Text(
                     '${_getGreeting()} 👋',
                     style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  ).animate().fadeIn(
+                    duration: 400.ms,
+                    curve: Curves.easeOut,
+                  ).slideX(begin: -0.05),
                   const SizedBox(height: 2),
                   Text(
                     today,
@@ -75,6 +79,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           color: AppTheme.textSecondary,
                           fontSize: 13,
                         ),
+                  ).animate().fadeIn(
+                    duration: 400.ms,
+                    delay: 100.ms,
+                    curve: Curves.easeOut,
                   ),
                 ],
               ),
@@ -94,29 +102,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       color: AppTheme.textSecondary,
                       fontWeight: FontWeight.normal,
                     ),
+              ).animate().fadeIn(
+                duration: 400.ms,
+                delay: 150.ms,
+                curve: Curves.easeOut,
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SummaryChips()),
+          SliverToBoxAdapter(
+            child: SummaryChips().animate().fadeIn(
+              duration: 400.ms,
+              delay: 250.ms,
+              curve: Curves.easeOut,
+            ).slideY(begin: 0.1),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
-          const SliverToBoxAdapter(child: RecentItems()),
+          SliverToBoxAdapter(
+            child: RecentItems().animate().fadeIn(
+              duration: 400.ms,
+              delay: 350.ms,
+              curve: Curves.easeOut,
+            ).slideY(begin: 0.1),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          const SliverToBoxAdapter(child: CategoryGrid()),
+          SliverToBoxAdapter(
+            child: CategoryGrid().animate().fadeIn(
+              duration: 400.ms,
+              delay: 450.ms,
+              curve: Curves.easeOut,
+            ).slideY(begin: 0.1),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
       floatingActionButton: AnimatedSlide(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 300),
         offset: _isFabVisible ? Offset.zero : const Offset(0, 2),
         child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 300),
           opacity: _isFabVisible ? 1.0 : 0.0,
           child: FloatingActionButton.extended(
             onPressed: () {
+              HapticFeedback.lightImpact();
               Navigator.pushNamed(context, AppRoutes.addItem);
             },
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add).animate(onPlay: (controller) {
+              // Subtle pulse on build
+            }).shimmer(duration: 2.seconds, color: Colors.white38),
             label: const Text('Tambah Barang'),
+          ).animate().scale(
+            duration: 400.ms,
+            delay: 500.ms,
+            curve: Curves.elasticOut,
+            begin: const Offset(0, 0),
           ),
         ),
       ),

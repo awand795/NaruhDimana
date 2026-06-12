@@ -12,6 +12,42 @@ class AppTheme {
   static const Color onSurface = Color(0xFF1A1D2E);
   static const Color textSecondary = Color(0xFF6B7280);
 
+  // Glassmorphism helper
+  static BoxDecoration glassDecoration({
+    double blur = 20,
+    Color tint = Colors.white,
+    double opacity = 0.7,
+    double radius = 16,
+  }) {
+    return BoxDecoration(
+      color: tint.withValues(alpha: opacity),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  static List<BoxShadow> softShadow({
+    Color color = Colors.black,
+    double alpha = 0.06,
+    double blur = 12,
+    double y = 2,
+  }) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: alpha),
+        blurRadius: blur,
+        offset: Offset(0, y),
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: alpha * 0.5),
+        blurRadius: blur * 2,
+        offset: Offset(0, y * 2),
+      ),
+    ];
+  }
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -93,6 +129,7 @@ class AppTheme {
       foregroundColor: onSurface,
       elevation: 0,
       centerTitle: false,
+      scrolledUnderElevation: 0.5,
       titleTextStyle: GoogleFonts.plusJakartaSans(
         fontWeight: FontWeight.w600,
         fontSize: 20,
@@ -106,6 +143,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      surfaceTintColor: Colors.transparent,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -208,6 +246,12 @@ class AppTheme {
       color: Colors.grey.shade200,
       thickness: 1,
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      indicatorColor: primaryColor.withValues(alpha: 0.12),
+      backgroundColor: surface.withValues(alpha: 0.95),
+    ),
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -243,6 +287,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      surfaceTintColor: Colors.transparent,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -286,6 +331,12 @@ class AppTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.3),
+      indicatorColor: const Color(0xFF7B93FF).withValues(alpha: 0.15),
+      backgroundColor: const Color(0xFF1E2030).withValues(alpha: 0.95),
     ),
   );
 }

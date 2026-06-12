@@ -14,6 +14,7 @@ import '../../services/image_service.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/router.dart';
+import '../../core/category_helper.dart';
 
 class DetailScreen extends ConsumerStatefulWidget {
   final Item item;
@@ -75,10 +76,9 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
   }
 
   String _getCategoryName() {
-    final categories = AppConstants.categories.where(
-      (c) => c.slug == _item.category,
-    );
-    return categories.isNotEmpty ? categories.first.name : 'Lainnya';
+    final mergedAsync = ref.read(mergedCategoriesProvider);
+    final allCategories = mergedAsync.valueOrNull ?? [];
+    return findCategoryBySlugOrFallback(allCategories, _item.category).name;
   }
 
   Future<void> _deleteItem() async {
@@ -196,10 +196,9 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final category = AppConstants.categories.firstWhere(
-      (c) => c.slug == _item.category,
-      orElse: () => AppConstants.categories.last,
-    );
+    final mergedAsync = ref.watch(mergedCategoriesProvider);
+    final allCategories = mergedAsync.valueOrNull ?? [];
+    final category = findCategoryBySlugOrFallback(allCategories, _item.category);
 
     return Scaffold(
       body: CustomScrollView(
@@ -515,7 +514,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     );
   }
 
-  Widget _buildPlaceholder(CategoryInfo category) {
+  Widget _buildPlaceholder(MergedCategory category) {
     return Container(
       color: AppTheme.primaryColor.withValues(alpha: 0.1),
       child: Center(

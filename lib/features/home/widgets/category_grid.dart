@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../providers/item_provider.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme.dart';
+import '../../../core/category_helper.dart';
 
 class CategoryGrid extends ConsumerWidget {
   const CategoryGrid({super.key});
@@ -10,6 +13,7 @@ class CategoryGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final countsAsync = ref.watch(categoryCountsProvider);
+    final mergedAsync = ref.watch(mergedCategoriesProvider);
 
     return countsAsync.when(
       data: (counts) {
@@ -23,24 +27,29 @@ class CategoryGrid extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 3.5,
+              mergedAsync.when(
+                data: (categories) => GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 3.5,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = categories[index];
+                    final count = counts[cat.slug] ?? 0;
+                    return _CategoryItem(
+                      category: cat,
+                      count: count,
+                      index: index,
+                    );
+                  },
                 ),
-                itemCount: AppConstants.categories.length,
-                itemBuilder: (context, index) {
-                  final cat = AppConstants.categories[index];
-                  final count = counts[cat.slug] ?? 0;
-                  return _CategoryItem(
-                    category: cat,
-                    count: count,
-                  );
-                },
+                loading: () => _buildShimmerLoading(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ],
           ),
@@ -56,40 +65,50 @@ class CategoryGrid extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.85,
-              ),
-              itemCount: AppConstants.categories.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                );
-              },
-            ),
+            _buildShimmerLoading(),
           ],
         ),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
+
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: AppConstants.categories.length,
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _CategoryItem extends StatelessWidget {
-  final CategoryInfo category;
+  final MergedCategory category;
   final int count;
+  final int index;
 
   const _CategoryItem({
     required this.category,
     required this.count,
+    required this.index,
   });
 
   @override
@@ -99,13 +118,7 @@ class _CategoryItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: AppTheme.softShadow(),
       ),
       child: Row(
         children: [
@@ -150,6 +163,10 @@ class _CategoryItem extends StatelessWidget {
             ),
         ],
       ),
-    );
+    ).animate().fadeIn(
+      duration: 350.ms,
+      delay: (index * 60).ms,
+      curve: Curves.easeOut,
+    ).slideX(begin: -0.05);
   }
 }

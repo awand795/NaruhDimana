@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import '../models/item_model.dart';
+import '../models/category_data.dart';
 import '../../core/constants.dart';
 
 class DatabaseHelper {
@@ -28,10 +29,17 @@ class DatabaseHelper {
       version: AppConstants.databaseVersion,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
-        // Future migration example:
-        // if (oldVersion < 2) {
-        //   await db.execute('ALTER TABLE items ADD COLUMN expiry_date TEXT');
-        // }
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS categories (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL UNIQUE,
+              slug TEXT NOT NULL UNIQUE,
+              icon_code_point INTEGER NOT NULL DEFAULT 0xe2c8,
+              created_at TEXT NOT NULL
+            )
+          ''');
+        }
       },
     );
   }
@@ -53,6 +61,16 @@ class DatabaseHelper {
         reminder_repeat TEXT DEFAULT 'none',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        slug TEXT NOT NULL UNIQUE,
+        icon_code_point INTEGER NOT NULL DEFAULT 0xe2c8,
+        created_at TEXT NOT NULL
       )
     ''');
 
@@ -246,5 +264,46 @@ class DatabaseHelper {
       whereArgs: [now],
     );
     return maps.map((map) => Item.fromMap(map)).toList();
+  }
+
+  // ─── Categories CRUD ────────────────────────────────────────────────
+
+  Future<List<CategoryData>> getAllCategories() async {
+    final db = await database;
+    final maps = await db.query(
+      'categories',
+      orderBy: 'name ASC',
+    );
+    return maps.map((map) => CategoryData.fromMap(map)).toList();
+  }
+
+  Future<int> insertCategory(CategoryData category) async {
+    final db = await database;
+    return await db.insert('categories', category.toMap());
+  }
+
+  Future<int> updateCategory(CategoryData category) async {
+    final db = await database;
+    return await db.update(
+      'categories',
+      category.toMap(),
+      where: 'id = ?',
+      whereArgs: [category.id],
+    );
+  }
+
+  Future<int> deleteCategory(int id) async {
+    final db = await database;
+    return await db.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> getCategoryCount() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM categories');
+    return (result.first['count'] as int?) ?? 0;
   }
 }

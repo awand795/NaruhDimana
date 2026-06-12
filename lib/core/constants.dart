@@ -38,10 +38,11 @@ class AppConstants {
 
   // Database
   static const String databaseName = 'naruh_dimana.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   // Shared Preferences keys
   static const String prefOnboardingComplete = 'onboarding_complete';
+  static const String prefUserProfile = 'user_profile';
 }
 
 class CategoryInfo {

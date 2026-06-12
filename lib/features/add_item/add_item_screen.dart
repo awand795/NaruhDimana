@@ -12,6 +12,7 @@ import '../../services/location_service.dart';
 import '../../services/notification_service.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
+import '../../core/category_helper.dart';
 
 class AddItemScreen extends ConsumerStatefulWidget {
   const AddItemScreen({super.key});
@@ -355,48 +356,62 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: AppConstants.categories.map((cat) {
-                  final isSelected = _selectedCategory == cat.slug;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            cat.icon,
-                            size: 18,
-                            color: isSelected
-                                ? Colors.white
-                                : AppTheme.primaryColor,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            cat.name,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppTheme.onSurface,
+            Consumer(
+              builder: (context, ref, _) {
+                final mergedAsync = ref.watch(mergedCategoriesProvider);
+                return mergedAsync.when(
+                  data: (categories) => SizedBox(
+                    height: 44,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        ...categories.map((cat) {
+                          final isSelected = _selectedCategory == cat.slug;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    cat.icon,
+                                    size: 18,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppTheme.primaryColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    cat.name,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppTheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              selected: isSelected,
+                              selectedColor: AppTheme.primaryColor,
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : AppTheme.onSurface,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              onSelected: (_) =>
+                                  setState(() => _selectedCategory = cat.slug),
                             ),
-                          ),
-                        ],
-                      ),
-                      selected: isSelected,
-                      selectedColor: AppTheme.primaryColor,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppTheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _selectedCategory = cat.slug),
+                          );
+                        }),
+                      ],
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                  loading: () => const SizedBox(
+                    height: 44,
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  ),
+                  error: (_, __) => const SizedBox(height: 44),
+                );
+              },
             ),
             const SizedBox(height: 20),
 

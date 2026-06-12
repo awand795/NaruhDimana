@@ -6,4 +6,8 @@ class AppRoutes {
   static const String detailItem = '/detail-item';
   static const String fullMap = '/full-map';
   static const String onboarding = '/onboarding';
+  static const String manageCategories = '/manage-categories';
+  static const String about = '/about';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String editProfile = '/edit-profile';
 }

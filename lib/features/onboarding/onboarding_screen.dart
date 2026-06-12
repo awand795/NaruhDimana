@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/router.dart';
@@ -92,6 +93,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             size: 70,
                             color: page.color,
                           ),
+                        ).animate().scale(
+                          duration: 600.ms,
+                          curve: Curves.elasticOut,
+                          begin: const Offset(0, 0),
                         ),
                         const SizedBox(height: 40),
                         Text(
@@ -101,7 +106,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               .headlineMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
-                        ),
+                        ).animate().fadeIn(
+                          duration: 500.ms,
+                          delay: 200.ms,
+                          curve: Curves.easeOut,
+                        ).slideY(begin: 0.1),
                         const SizedBox(height: 16),
                         Text(
                           page.description,
@@ -113,7 +122,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 1.5,
                               ),
                           textAlign: TextAlign.center,
-                        ),
+                        ).animate().fadeIn(
+                          duration: 500.ms,
+                          delay: 350.ms,
+                          curve: Curves.easeOut,
+                        ).slideY(begin: 0.1),
                       ],
                     ),
                   );

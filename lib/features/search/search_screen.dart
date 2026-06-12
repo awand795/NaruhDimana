@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/search_provider.dart';
 import '../../data/models/item_model.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/router.dart';
+import '../../core/category_helper.dart';
 import '../../providers/item_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/notification_service.dart';
@@ -22,15 +24,26 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchController = TextEditingController();
+  final _focusNode = FocusNode();
   final ItemRepository _repository = ItemRepository();
   final ImageService _imageService = ImageService();
   final NotificationService _notificationService = NotificationService();
   List<Item> _searchResults = [];
   bool _isLoading = false;
+  bool _isSearchFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _isSearchFocused = _focusNode.hasFocus);
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -78,7 +91,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<void> _deleteItem(Item item) async {
-    // ConfirmDismiss already handles confirmation, this just performs the deletion
     await _imageService.deleteImage(item.photoPath);
     if (item.id != null) {
       await _notificationService.cancelNotification(item.id!);
@@ -116,45 +128,84 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 100,
+            expandedHeight: 80,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
               title: Text(
                 'Cari Barang',
                 style: Theme.of(context).textTheme.titleLarge,
-              ),
+              ).animate().fadeIn(duration: 300.ms),
             ),
           ),
+          // Glassmorphism search bar
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Cari nama, lokasi, catatan...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _performSearch('');
-                          },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  decoration: _isSearchFocused
+                      ? BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         )
-                      : null,
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                      : AppTheme.glassDecoration(radius: 14),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama, lokasi, catatan...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: _isSearchFocused
+                            ? AppTheme.primaryColor
+                            : AppTheme.textSecondary,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                _performSearch('');
+                                _focusNode.unfocus();
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: _isSearchFocused
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.85),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: _isSearchFocused
+                            ? const BorderSide(color: AppTheme.primaryColor, width: 1.5)
+                            : BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                      ),
+                    ),
+                    onChanged: _performSearch,
+                    textInputAction: TextInputAction.search,
                   ),
                 ),
-                onChanged: _performSearch,
-                textInputAction: TextInputAction.search,
               ),
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
           ),
+          // Filter chips
           SliverToBoxAdapter(
             child: SizedBox(
               height: 44,
@@ -200,7 +251,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     onSelected: (_) => _showCategoryPicker(),
                   ),
                   const SizedBox(width: 8),
-                  // Sort
                   PopupMenuButton<String>(
                     initialValue: sortBy,
                     onSelected: (value) {
@@ -221,7 +271,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ),
                       ),
                     ).toList(),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -245,7 +296,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                 ],
               ),
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: 150.ms),
           ),
           if (hasActiveFilters)
             SliverToBoxAdapter(
@@ -256,7 +307,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     if (selectedCategory != null)
                       Chip(
                         label: Text(
-                          'Kategori: ${AppConstants.categories.firstWhere((c) => c.slug == selectedCategory).name}',
+                          'Kategori: ${_getSelectedCategoryName(selectedCategory)}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         deleteIcon: const Icon(Icons.close, size: 16),
@@ -312,24 +363,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             )
           else if (_searchController.text.isNotEmpty)
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = _searchResults[index];
-                  return _SearchResultItem(
-                    item: item,
-                    onDelete: () => _deleteItem(item),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.detailItem,
-                        arguments: item,
+            Consumer(
+              builder: (context, ref, _) {
+                final mergedAsync = ref.watch(mergedCategoriesProvider);
+                final allCategories = mergedAsync.valueOrNull ?? [];
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = _searchResults[index];
+                      final category = findCategoryBySlugOrFallback(
+                        allCategories, item.category,
+                      );
+                      return _SearchResultItem(
+                        item: item,
+                        category: category,
+                        index: index,
+                        onDelete: () => _deleteItem(item),
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.detailItem,
+                            arguments: item,
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                childCount: _searchResults.length,
-              ),
+                    childCount: _searchResults.length,
+                  ),
+                );
+              },
             )
           else
             SliverToBoxAdapter(
@@ -360,7 +422,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  String _getSelectedCategoryName(String slug) {
+    final categories = ref.read(mergedCategoriesProvider).valueOrNull ?? [];
+    return findCategoryBySlugOrFallback(categories, slug).name;
+  }
+
   void _showCategoryPicker() {
+    final categories = ref.read(mergedCategoriesProvider).valueOrNull ?? [];
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -375,7 +443,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               Text('Pilih Kategori',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              ...AppConstants.categories.map((cat) {
+              ...categories.map((cat) {
                 final isSelected =
                     ref.read(selectedCategoryFilterProvider) == cat.slug;
                 return ListTile(
@@ -417,35 +485,47 @@ class _FilterChip extends StatelessWidget {
     final Color iconColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
     final Color textColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
 
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: iconColor),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 13, color: textColor),
-          ),
-        ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: FilterChip(
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: iconColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(fontSize: 13, color: textColor),
+            ),
+          ],
+        ),
+        selected: selected,
+        onSelected: onSelected,
+        selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
+        checkmarkColor: AppTheme.primaryColor,
+        backgroundColor: Colors.white,
+        side: BorderSide(color: Colors.grey.shade300),
+        showCheckmark: false,
       ),
-      selected: selected,
-      onSelected: onSelected,
-      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-      checkmarkColor: AppTheme.primaryColor,
-      backgroundColor: Colors.white,
-      side: BorderSide(color: Colors.grey.shade300),
+    ).animate().scale(
+      duration: 200.ms,
+      curve: Curves.elasticOut,
     );
   }
 }
 
 class _SearchResultItem extends StatelessWidget {
   final Item item;
+  final MergedCategory category;
+  final int index;
   final VoidCallback onDelete;
   final VoidCallback onTap;
 
   const _SearchResultItem({
     required this.item,
+    required this.category,
+    required this.index,
     required this.onDelete,
     required this.onTap,
   });
@@ -462,11 +542,6 @@ class _SearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = AppConstants.categories.firstWhere(
-      (c) => c.slug == item.category,
-      orElse: () => AppConstants.categories.last,
-    );
-
     return Dismissible(
       key: Key(item.id.toString()),
       direction: DismissDirection.endToStart,
@@ -503,6 +578,10 @@ class _SearchResultItem extends StatelessWidget {
       onDismissed: (_) => onDelete(),
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: ListTile(
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -570,6 +649,10 @@ class _SearchResultItem extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right, size: 20),
         ),
       ),
-    );
+    ).animate().fadeIn(
+      duration: 300.ms,
+      delay: (index * 50).ms,
+      curve: Curves.easeOut,
+    ).slideY(begin: 0.05);
   }
 }
