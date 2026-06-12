@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/theme.dart';
-import '../../../core/constants.dart';
-import '../../../core/router.dart';
+import '../../core/theme.dart';
+import '../../core/constants.dart';
+import '../../core/router.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

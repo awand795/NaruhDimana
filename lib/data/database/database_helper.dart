@@ -27,6 +27,12 @@ class DatabaseHelper {
       path,
       version: AppConstants.databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // Future migration example:
+        // if (oldVersion < 2) {
+        //   await db.execute('ALTER TABLE items ADD COLUMN expiry_date TEXT');
+        // }
+      },
     );
   }
 

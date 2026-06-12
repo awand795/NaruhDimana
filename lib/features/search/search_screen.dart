@@ -1,16 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../providers/search_provider.dart';
 import '../../data/models/item_model.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
 import '../../core/router.dart';
-import 'dart:io';
-import 'package:intl/intl.dart';
-
-import 'package:flutter/services.dart';
 import '../../providers/item_provider.dart';
+import '../../services/image_service.dart';
+import '../../services/notification_service.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -22,6 +23,8 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchController = TextEditingController();
   final ItemRepository _repository = ItemRepository();
+  final ImageService _imageService = ImageService();
+  final NotificationService _notificationService = NotificationService();
   List<Item> _searchResults = [];
   bool _isLoading = false;
 
@@ -75,42 +78,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<void> _deleteItem(Item item) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Barang'),
-        content: Text('Yakin ingin menghapus "${item.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+    // ConfirmDismiss already handles confirmation, this just performs the deletion
+    await _imageService.deleteImage(item.photoPath);
+    if (item.id != null) {
+      await _notificationService.cancelNotification(item.id!);
+    }
+    await ref.read(itemsProvider.notifier).deleteItem(item.id!);
+    HapticFeedback.mediumImpact();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${item.name}" berhasil dihapus'),
+          action: SnackBarAction(
+            label: 'Urungkan',
+            onPressed: () async {
+              await ref.read(itemsProvider.notifier).addItem(item);
+            },
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await ref.read(itemsProvider.notifier).deleteItem(item.id!);
-      HapticFeedback.mediumImpact();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"${item.name}" berhasil dihapus'),
-            action: SnackBarAction(
-              label: 'Urungkan',
-              onPressed: () async {
-                await ref.read(itemsProvider.notifier).addItem(item);
-              },
-            ),
-          ),
-        );
-        _performSearch(_searchController.text);
-      }
+        ),
+      );
+      _performSearch(_searchController.text);
     }
   }
 
@@ -485,6 +472,26 @@ class _SearchResultItem extends StatelessWidget {
         ),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hapus Barang'),
+            content: Text('Yakin ingin menghapus "${item.name}"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Hapus'),
+              ),
+            ],
+          ),
+        );
+      },
       onDismissed: (_) => onDelete(),
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

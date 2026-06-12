@@ -14,7 +14,7 @@ import 'features/detail/detail_screen.dart';
 import 'features/detail/full_map_screen.dart';
 import 'features/add_item/add_item_screen.dart';
 import 'features/edit/edit_item_screen.dart';
-import 'features/home/widgets/onboarding_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'data/models/item_model.dart';
 import 'services/notification_service.dart';
 
@@ -35,7 +35,8 @@ void main() async {
   );
 
   // Initialize timezone
-  final timeZoneName = await FlutterTimezone.getLocalTimezone();
+  final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+  final timeZoneName = timeZoneInfo.identifier;
   tz_data.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation(timeZoneName));
 

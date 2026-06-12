@@ -11,16 +11,19 @@ final itemsProvider = StateNotifierProvider<ItemsNotifier, AsyncValue<List<Item>
 });
 
 final recentItemsProvider = FutureProvider<List<Item>>((ref) async {
+  ref.watch(itemsProvider); // triggers refresh when itemsProvider changes
   final repo = ref.read(itemRepositoryProvider);
   return repo.getRecentItems(5);
 });
 
 final categoryCountsProvider = FutureProvider<Map<String, int>>((ref) async {
+  ref.watch(itemsProvider); // triggers refresh when itemsProvider changes
   final repo = ref.read(itemRepositoryProvider);
   return repo.getCategoryCounts();
 });
 
 final itemStatsProvider = FutureProvider<Map<String, int>>((ref) async {
+  ref.watch(itemsProvider); // triggers refresh when itemsProvider changes
   final repo = ref.read(itemRepositoryProvider);
   final total = await repo.getItemCount();
   final reminders = await repo.getItemsWithRemindersCount();

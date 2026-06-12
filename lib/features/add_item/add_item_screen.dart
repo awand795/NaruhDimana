@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../data/models/item_model.dart';
 import '../../providers/item_provider.dart';
@@ -37,6 +38,9 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   String? _address;
   bool _isSaving = false;
   bool _isLoadingLocation = false;
+
+  DateTime? _selectedReminderTime;
+  String _reminderRepeat = 'none';
 
   @override
   void dispose() {
@@ -116,6 +120,46 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     }
   }
 
+  Future<void> _pickReminderDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(hours: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('id'),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(
+        DateTime.now().add(const Duration(hours: 1)),
+      ),
+    );
+    if (time == null || !mounted) return;
+
+    final repeatResult = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Ulangi Pengingat'),
+        children: AppConstants.reminderRepeatOptions.map((opt) =>
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, opt['value'] as String),
+            child: Text(opt['label'] as String),
+          ),
+        ).toList(),
+      ),
+    );
+    if (repeatResult == null) return;
+
+    setState(() {
+      _selectedReminderTime = DateTime(
+        date.year, date.month, date.day, time.hour, time.minute,
+      );
+      _reminderRepeat = repeatResult;
+    });
+  }
+
   Future<void> _saveItem() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -137,14 +181,17 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
         latitude: _latitude,
         longitude: _longitude,
         address: _address,
+        reminderTime: _selectedReminderTime?.toIso8601String(),
+        reminderRepeat: _reminderRepeat,
         createdAt: now,
         updatedAt: now,
       );
 
-      await ref.read(itemsProvider.notifier).addItem(item);
+      final savedId = await ref.read(itemsProvider.notifier).addItem(item);
 
-      if (item.reminderTime != null) {
-        await _notificationService.scheduleNotification(item);
+      if (_selectedReminderTime != null) {
+        final savedItem = item.copyWith(id: savedId);
+        await _notificationService.scheduleNotification(savedItem);
       }
 
       if (mounted) {
@@ -428,7 +475,44 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
+
+            // Reminder
+            Text('Pengingat', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _pickReminderDateTime,
+                icon: Icon(
+                  _selectedReminderTime != null ? Icons.alarm_on : Icons.add_alarm,
+                  color: _selectedReminderTime != null ? Colors.green : null,
+                ),
+                label: Text(
+                  _selectedReminderTime != null
+                    ? 'Pengingat: ${DateFormat('dd MMM, HH:mm', 'id').format(_selectedReminderTime!)}'
+                    : 'Atur Pengingat (opsional)',
+                ),
+              ),
+            ),
+            if (_selectedReminderTime != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => setState(() {
+                      _selectedReminderTime = null;
+                      _reminderRepeat = 'none';
+                    }),
+                    icon: const Icon(Icons.close, size: 16),
+                    label: const Text('Hapus pengingat'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 24),
 
             // Save Button
             SizedBox(

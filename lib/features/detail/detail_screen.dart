@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';import '../../data/models/item_model.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../data/models/item_model.dart';
 import '../../providers/item_provider.dart';
 import '../../services/location_service.dart';
 import '../../services/notification_service.dart';
@@ -59,7 +60,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
       text.writeln('🔖 Tag: ${_item.tags}');
     }
     if (_item.address != null) {
-      text.writeln('📍 Lokasi: ${_item.address}');
+      text.writeln('📍 Lokasi GPS: ${_item.address}');
     }
     if (_item.notes != null && _item.notes!.isNotEmpty) {
       text.writeln('📝 Catatan: ${_item.notes}');
@@ -67,10 +68,10 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     text.writeln();
     text.writeln('— Dari NaruhDimana');
 
-    final uri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text.toString())}');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
+    await Share.share(
+      text.toString(),
+      subject: _item.name,
+    );
   }
 
   String _getCategoryName() {
