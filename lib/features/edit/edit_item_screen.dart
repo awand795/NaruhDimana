@@ -352,13 +352,20 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
                                   ? Colors.white
                                   : AppTheme.primaryColor),
                           const SizedBox(width: 6),
-                          Text(cat.name),
+                          Text(
+                            cat.name,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppTheme.onSurface,
+                            ),
+                          ),
                         ],
                       ),
                       selected: isSelected,
                       selectedColor: AppTheme.primaryColor,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : null,
+                        color: isSelected ? Colors.white : AppTheme.onSurface,
                       ),
                       onSelected: (_) =>
                           setState(() => _selectedCategory = cat.slug),

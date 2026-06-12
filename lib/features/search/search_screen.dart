@@ -414,19 +414,27 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color iconColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
+    final Color textColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
+
     return FilterChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16),
+          Icon(icon, size: 16, color: iconColor),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, color: textColor),
+          ),
         ],
       ),
       selected: selected,
       onSelected: onSelected,
       selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
       checkmarkColor: AppTheme.primaryColor,
+      backgroundColor: Colors.white,
+      side: BorderSide(color: Colors.grey.shade300),
     );
   }
 }
