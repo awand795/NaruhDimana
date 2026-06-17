@@ -8,12 +8,14 @@ class MergedCategory {
   final IconData icon;
   final String slug;
   final bool isCustom;
+  final Color? color;
 
   const MergedCategory({
     required this.name,
     required this.icon,
     required this.slug,
     this.isCustom = false,
+    this.color,
   });
 }
 
@@ -40,6 +42,7 @@ final mergedCategoriesProvider = FutureProvider<List<MergedCategory>>((ref) asyn
       icon: IconData(cat.iconCodePoint, fontFamily: 'MaterialIcons'),
       slug: cat.slug,
       isCustom: true,
+      color: cat.colorValue != null ? Color(cat.colorValue!) : null,
     ));
   }
 

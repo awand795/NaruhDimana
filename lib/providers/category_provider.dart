@@ -29,13 +29,14 @@ class CustomCategoriesNotifier extends StateNotifier<AsyncValue<List<CategoryDat
     }
   }
 
-  Future<int> addCategory(String name, int iconCodePoint) async {
+  Future<int> addCategory(String name, int iconCodePoint, {int? colorValue}) async {
     final now = DateTime.now().toIso8601String();
     final slug = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
     final category = CategoryData(
       name: name,
       slug: slug,
       iconCodePoint: iconCodePoint,
+      colorValue: colorValue,
       createdAt: now,
     );
     final id = await _db.insertCategory(category);

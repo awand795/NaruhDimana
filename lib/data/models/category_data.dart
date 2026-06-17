@@ -3,6 +3,7 @@ class CategoryData {
   final String name;
   final String slug;
   final int iconCodePoint;
+  final int? colorValue;
   final String createdAt;
 
   const CategoryData({
@@ -10,6 +11,7 @@ class CategoryData {
     required this.name,
     required this.slug,
     this.iconCodePoint = 0xe2c8,
+    this.colorValue,
     required this.createdAt,
   });
 
@@ -19,6 +21,7 @@ class CategoryData {
       name: map['name'] as String,
       slug: map['slug'] as String,
       iconCodePoint: map['icon_code_point'] as int? ?? 0xe2c8,
+      colorValue: map['color_value'] as int?,
       createdAt: map['created_at'] as String,
     );
   }
@@ -29,6 +32,7 @@ class CategoryData {
       'name': name,
       'slug': slug,
       'icon_code_point': iconCodePoint,
+      'color_value': colorValue,
       'created_at': createdAt,
     };
   }
@@ -38,6 +42,7 @@ class CategoryData {
     String? name,
     String? slug,
     int? iconCodePoint,
+    int? colorValue,
     String? createdAt,
   }) {
     return CategoryData(
@@ -45,6 +50,7 @@ class CategoryData {
       name: name ?? this.name,
       slug: slug ?? this.slug,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      colorValue: colorValue ?? this.colorValue,
       createdAt: createdAt ?? this.createdAt,
     );
   }

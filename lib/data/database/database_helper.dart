@@ -40,6 +40,16 @@ class DatabaseHelper {
             )
           ''');
         }
+        if (oldVersion < 3) {
+          // Add photo_paths to items
+          try {
+            await db.execute('ALTER TABLE items ADD COLUMN photo_paths TEXT');
+          } catch (_) {}
+          // Add color_value to categories
+          try {
+            await db.execute('ALTER TABLE categories ADD COLUMN color_value INTEGER');
+          } catch (_) {}
+        }
       },
     );
   }
@@ -54,6 +64,7 @@ class DatabaseHelper {
         tags TEXT,
         notes TEXT,
         photo_path TEXT,
+        photo_paths TEXT,
         latitude REAL,
         longitude REAL,
         address TEXT,
@@ -70,6 +81,7 @@ class DatabaseHelper {
         name TEXT NOT NULL UNIQUE,
         slug TEXT NOT NULL UNIQUE,
         icon_code_point INTEGER NOT NULL DEFAULT 0xe2c8,
+        color_value INTEGER,
         created_at TEXT NOT NULL
       )
     ''');

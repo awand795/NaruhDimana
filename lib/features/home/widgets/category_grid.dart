@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,11 +25,20 @@ class CategoryGrid extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Kategori',
-                style: Theme.of(context).textTheme.titleMedium,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Kategori',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.manageCategories),
+                    child: const Text('Lihat Semua', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               mergedAsync.when(
                 data: (categories) =>
                     _buildBentoGrid(context, categories, counts),
@@ -59,37 +69,41 @@ class CategoryGrid extends ConsumerWidget {
 
   Widget _buildBentoGrid(
       BuildContext context, List<MergedCategory> categories, Map<String, int> counts) {
-    // Sort berdasarkan count descending
     final sorted = [...categories]..sort((a, b) =>
         (counts[b.slug] ?? 0).compareTo(counts[a.slug] ?? 0));
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
-        final gap = 10.0;
+        final gap = 12.0;
         final smallW = (totalWidth - gap) / 2;
 
         return Wrap(
           spacing: gap,
           runSpacing: gap,
-          children: sorted.asMap().entries.map((entry) {
-            final i = entry.key;
-            final cat = entry.value;
-            final count = counts[cat.slug] ?? 0;
+          children: [
+            ...sorted.asMap().entries.map((entry) {
+              final i = entry.key;
+              final cat = entry.value;
+              final count = counts[cat.slug] ?? 0;
+              final isLarge = i == 0 && count > 1;
 
-            // Item teratas (count terbesar) dapat tile full width
-            final isLarge = i == 0 && count > 2;
-
-            return SizedBox(
-              width: isLarge ? totalWidth : smallW,
-              child: _BentoTile(
-                category: cat,
-                count: count,
-                isLarge: isLarge,
-                index: i,
-              ),
-            );
-          }).toList(),
+              return SizedBox(
+                width: isLarge ? totalWidth : smallW,
+                child: _BentoTile(
+                  category: cat,
+                  count: count,
+                  isLarge: isLarge,
+                  index: i,
+                ),
+              );
+            }),
+            // Add Category Button
+            SizedBox(
+              width: smallW,
+              child: _AddCategoryTile(index: sorted.length),
+            ),
+          ],
         );
       },
     );
@@ -102,7 +116,7 @@ class CategoryGrid extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
-          final gap = 10.0;
+          final gap = 12.0;
           final smallW = (totalWidth - gap) / 2;
           return Wrap(
             spacing: gap,
@@ -111,10 +125,10 @@ class CategoryGrid extends ConsumerWidget {
               final isLarge = index == 0;
               return Container(
                 width: isLarge ? totalWidth : smallW,
-                height: isLarge ? 72 : 56,
+                height: isLarge ? 80 : 64,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               );
             }),
@@ -140,92 +154,142 @@ class _BentoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final catColor = AppTheme.getCategoryColor(category.slug, context);
+    final baseColor = category.color ?? AppTheme.getCategoryColor(category.slug, context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        // Set category filter before navigating to search
-        // Note: Use context.read since we're in a StatelessWidget;
-        // we pass via route arguments for simplicity
         Navigator.pushNamed(context, AppRoutes.search, arguments: category.slug);
       },
-      child: AnimatedContainer(
-        duration: AppTheme.microDuration,
-        height: isLarge ? 72 : 56,
-        padding: EdgeInsets.symmetric(
-          horizontal: isLarge ? 20 : 14,
-          vertical: isLarge ? 16 : 10,
-        ),
-        decoration: BoxDecoration(
-          color: catColor.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: catColor.withValues(alpha: 0.15),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: isLarge ? 44 : 36,
-              height: isLarge ? 44 : 36,
-              decoration: BoxDecoration(
-                color: catColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(category.icon,
-                  color: catColor, size: isLarge ? 24 : 18),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          height: isLarge ? 80 : 64,
+          decoration: BoxDecoration(
+            color: baseColor.withValues(alpha: isDark ? 0.15 : 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: baseColor.withValues(alpha: isDark ? 0.25 : 0.15),
+              width: 1,
             ),
-            SizedBox(width: isLarge ? 16 : 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.name,
-                    style: TextStyle(
-                      fontSize: isLarge ? 15 : 13,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+          ),
+          child: Stack(
+            children: [
+              // Subtle background icon for large tiles
+              if (isLarge)
+                Positioned(
+                  right: -10,
+                  bottom: -10,
+                  child: Icon(
+                    category.icon,
+                    size: 80,
+                    color: baseColor.withValues(alpha: 0.05),
                   ),
-                  if (count > 0)
-                    Text(
-                      '$count barang',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: catColor,
-                        fontWeight: FontWeight.w500,
+                ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isLarge ? 20 : 14,
+                  vertical: isLarge ? 16 : 10,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: isLarge ? 48 : 38,
+                      height: isLarge ? 48 : 38,
+                      decoration: BoxDecoration(
+                        color: baseColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        category.icon,
+                        color: baseColor,
+                        size: isLarge ? 26 : 20,
                       ),
                     ),
-                ],
-              ),
-            ),
-            if (count > 0)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: catColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                    SizedBox(width: isLarge ? 16 : 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: isLarge ? 16 : 14,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          Text(
+                            '$count barang',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: baseColor.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: catColor,
-                  ),
-                ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     ).animate().fadeIn(
-      duration: AppTheme.shortDuration,
-      delay: (index * 40).ms,
-    ).slideY(begin: 0.06);
+      duration: 400.ms,
+      delay: (index * 50).ms,
+    ).scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOutBack);
+  }
+}
+
+class _AddCategoryTile extends StatelessWidget {
+  final int index;
+  const _AddCategoryTile({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.pushNamed(context, AppRoutes.manageCategories);
+      },
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.3),
+            style: BorderStyle.solid,
+            width: 1,
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_circle_outline_rounded, color: Colors.grey, size: 24),
+              SizedBox(height: 2),
+              Text(
+                'Tambah',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn(
+      duration: 400.ms,
+      delay: (index * 50).ms,
+    );
   }
 }

@@ -59,32 +59,59 @@ class SmartNudge extends ConsumerWidget {
     final hour = DateTime.now().hour;
     final reminders = stats['reminders'] as int? ?? 0;
     final total = stats['total'] as int? ?? 0;
+    final itemsWithGps = stats['gps'] as int? ?? 0;
 
     // Prioritas 1: ada pengingat hari ini
     if (reminders > 0) {
       return _NudgeData(
         icon: Icons.notifications_active_rounded,
-        message: '$reminders pengingat aktif — cek barangmu',
+        message: '$reminders pengingat aktif hari ini. Jangan lupa dicek ya!',
         color: const Color(0xFFEF9F27),
       );
     }
-    // Prioritas 2: pagi hari, ingatkan kunci
-    if (hour >= 6 && hour <= 9 && total > 0) {
-      return _NudgeData(
-        icon: Icons.wb_sunny_rounded,
-        message: 'Selamat pagi! Sudah cek barang bawaan hari ini?',
-        color: const Color(0xFF3B8BD4),
-      );
-    }
-    // Prioritas 3: belum ada barang sama sekali
+
+    // Prioritas 2: Belum ada barang sama sekali
     if (total == 0) {
       return _NudgeData(
         icon: Icons.add_box_rounded,
-        message: 'Mulai simpan barang pertamamu sekarang',
+        message: 'Mulai simpan barang pertamamu agar tidak lupa di mana naruhnya.',
         color: AppTheme.primaryColor,
       );
     }
-    return null;
+
+    // Prioritas 3: Pagi hari (6-9), ingatkan barang rutin
+    if (hour >= 6 && hour <= 9) {
+      return _NudgeData(
+        icon: Icons.wb_sunny_rounded,
+        message: 'Selamat pagi! Sudah siap bawa barang pentingmu hari ini?',
+        color: const Color(0xFF3B8BD4),
+      );
+    }
+
+    // Prioritas 4: Banyak barang tapi sedikit yang ada lokasi GPS
+    if (total > 5 && itemsWithGps < (total / 2)) {
+      return _NudgeData(
+        icon: Icons.location_on_rounded,
+        message: 'Beberapa barangmu belum ada koordinat GPS-nya nih.',
+        color: Colors.teal,
+      );
+    }
+
+    // Prioritas 5: Waktunya "Audit" barang (Malam hari 19-22)
+    if (hour >= 19 && hour <= 22) {
+      return _NudgeData(
+        icon: Icons.inventory_rounded,
+        message: 'Waktunya audit santai! Masih ingat posisi semua barangmu?',
+        color: Colors.indigo,
+      );
+    }
+
+    // Default: Tips acak
+    return _NudgeData(
+      icon: Icons.lightbulb_outline_rounded,
+      message: 'Tips: Tambahkan foto nota pembelian ke barang agar garansi aman.',
+      color: Colors.amber.shade700,
+    );
   }
 }
 

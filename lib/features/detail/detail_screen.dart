@@ -210,16 +210,64 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'item_photo_${_item.id}',
-                child: _item.photoPath != null
-                    ? Image.file(
-                        File(_item.photoPath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _buildPlaceholder(category, catColor),
-                      )
-                    : _buildPlaceholder(category, catColor),
+                child: _buildImageBackground(category, catColor),
               ),
             ),
+...
+  Widget _buildImageBackground(MergedCategory category, Color catColor) {
+    final paths = _item.photoPaths ?? [];
+    if (paths.isEmpty && _item.photoPath == null) {
+      return _buildPlaceholder(category, catColor);
+    }
+
+    final allPaths = [...paths];
+    if (allPaths.isEmpty && _item.photoPath != null) {
+      allPaths.add(_item.photoPath!);
+    }
+
+    if (allPaths.length <= 1) {
+      return Image.file(
+        File(allPaths.first),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(category, catColor),
+      );
+    }
+
+    return Stack(
+      children: [
+        PageView.builder(
+          itemCount: allPaths.length,
+          itemBuilder: (context, index) {
+            return Image.file(
+              File(allPaths[index]),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildPlaceholder(category, catColor),
+            );
+          },
+        ),
+        Positioned(
+          bottom: 12,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              allPaths.length,
+              (index) => Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
             actions: [
               IconButton(
                 icon: const Icon(Icons.share),

@@ -33,7 +33,7 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
   final NotificationService _notificationService = NotificationService();
 
   late String _selectedCategory;
-  String? _photoPath;
+  List<String> _photoPaths = [];
   double? _latitude;
   double? _longitude;
   String? _address;
@@ -49,7 +49,10 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
     _tagsController.text = item.tags ?? '';
     _notesController.text = item.notes ?? '';
     _selectedCategory = item.category;
-    _photoPath = item.photoPath;
+    _photoPaths = [...(item.photoPaths ?? [])];
+    if (_photoPaths.isEmpty && item.photoPath != null) {
+      _photoPaths.add(item.photoPath!);
+    }
     _latitude = item.latitude;
     _longitude = item.longitude;
     _address = item.address;
@@ -65,25 +68,29 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final status = await Permission.camera.request();
-    if (!status.isGranted) {
+    final status = source == ImageSource.camera 
+        ? await Permission.camera.request()
+        : await Permission.photos.request();
+        
+    if (!status.isGranted && !status.isLimited) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin kamera diperlukan')),
+          const SnackBar(content: Text('Izin diperlukan')),
         );
       }
       return;
     }
 
-    String? path;
     if (source == ImageSource.camera) {
-      path = await _imageService.pickFromCamera();
+      final path = await _imageService.pickFromCamera();
+      if (path != null && mounted) {
+        setState(() => _photoPaths.add(path));
+      }
     } else {
-      path = await _imageService.pickFromGallery();
-    }
-
-    if (path != null && mounted) {
-      setState(() => _photoPath = path);
+      final paths = await _imageService.pickMultipleFromGallery();
+      if (paths.isNotEmpty && mounted) {
+        setState(() => _photoPaths.addAll(paths));
+      }
     }
   }
 
@@ -150,7 +157,8 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        photoPath: _photoPath,
+        photoPaths: _photoPaths.isEmpty ? null : _photoPaths,
+        photoPath: _photoPaths.isNotEmpty ? _photoPaths.first : null,
         latitude: _latitude,
         longitude: _longitude,
         address: _address,
@@ -238,66 +246,68 @@ class _EditItemScreenState extends ConsumerState<EditItemScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Photo
-            GestureDetector(
-              onTap: () => _showImagePickerOptions(context),
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: _photoPath != null
-                    ? ClipRRect(
+            // Photo Section
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  GestureDetector(
+                    onTap: () => _showImagePickerOptions(context),
+                    child: Container(
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(16),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(
-                              File(_photoPath!),
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _photoPath = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.black54,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Column(
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_photo_alternate,
-                              size: 40, color: AppTheme.textSecondary),
-                          const SizedBox(height: 8),
-                          Text('Tambahkan Foto',
-                              style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontWeight: FontWeight.w500)),
+                          Icon(Icons.add_a_photo_outlined, color: AppTheme.textSecondary),
                           const SizedBox(height: 4),
-                          Text('Kamera atau Galeri',
-                              style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12)),
+                          Text('Tambah', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ..._photoPaths.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final path = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(
+                              File(path),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => setState(() => _photoPaths.removeAt(index)),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, color: Colors.white, size: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
             const SizedBox(height: 20),

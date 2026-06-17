@@ -19,14 +19,26 @@ class ImageService {
     return await _compressAndSave(image.path);
   }
 
-  Future<String?> pickFromGallery() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
+  Future<List<String>> pickMultipleFromGallery() async {
+    final List<XFile> images = await _picker.pickMultiImage(
       maxWidth: AppConstants.maxImageWidth.toDouble(),
       imageQuality: AppConstants.maxImageQuality,
     );
-    if (image == null) return null;
-    return await _compressAndSave(image.path);
+    if (images.isEmpty) return [];
+
+    final List<String> savedPaths = [];
+    for (final image in images) {
+      final savedPath = await _compressAndSave(image.path);
+      if (savedPath != null) savedPaths.add(savedPath);
+    }
+    return savedPaths;
+  }
+
+  Future<void> deleteImages(List<String>? paths) async {
+    if (paths == null || paths.isEmpty) return;
+    for (final path in paths) {
+      await deleteImage(path);
+    }
   }
 
   Future<String?> _compressAndSave(String sourcePath) async {

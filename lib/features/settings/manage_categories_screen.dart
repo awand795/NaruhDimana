@@ -39,6 +39,21 @@ const List<IconData> _categoryIcons = [
   Icons.restaurant,
 ];
 
+const List<Color> _categoryColors = [
+  Colors.blue,
+  Colors.red,
+  Colors.green,
+  Colors.orange,
+  Colors.purple,
+  Colors.teal,
+  Colors.pink,
+  Colors.amber,
+  Colors.indigo,
+  Colors.cyan,
+  Colors.brown,
+  Colors.grey,
+];
+
 class ManageCategoriesScreen extends ConsumerStatefulWidget {
   const ManageCategoriesScreen({super.key});
 
@@ -130,6 +145,7 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
   void _showAddCategoryDialog() {
     final nameController = TextEditingController();
     int selectedIconCodePoint = Icons.folder.codePoint;
+    Color selectedColor = AppTheme.primaryColor;
     bool isSaving = false;
 
     showDialog(
@@ -137,69 +153,93 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Tambah Kategori'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Kategori',
-                    hintText: 'Contoh: Elektronik',
-                    prefixIcon: Icon(Icons.label_outline),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Kategori',
+                      hintText: 'Contoh: Elektronik',
+                      prefixIcon: Icon(Icons.label_outline),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
                   ),
-                  textCapitalization: TextCapitalization.sentences,
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'Pilih Icon',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 120,
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        mainAxisSpacing: 4,
+                        crossAxisSpacing: 4,
+                      ),
+                      itemCount: _categoryIcons.length,
+                      itemBuilder: (context, index) {
+                        final icon = _categoryIcons[index];
+                        final isSelected = icon.codePoint == selectedIconCodePoint;
+                        return GestureDetector(
+                          onTap: () => setDialogState(() => selectedIconCodePoint = icon.codePoint),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected ? selectedColor.withValues(alpha: 0.15) : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: isSelected ? Border.all(color: selectedColor, width: 2) : null,
+                            ),
+                            child: Icon(
+                              icon,
+                              size: 24,
+                              color: isSelected ? selectedColor : Colors.grey.shade600,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 160,
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
-                      mainAxisSpacing: 4,
-                      crossAxisSpacing: 4,
-                    ),
-                    itemCount: _categoryIcons.length,
-                    itemBuilder: (context, index) {
-                      final icon = _categoryIcons[index];
-                      final isSelected = icon.codePoint == selectedIconCodePoint;
-                      return GestureDetector(
-                        onTap: () => setDialogState(() => selectedIconCodePoint = icon.codePoint),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.primaryColor.withValues(alpha: 0.15)
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: isSelected
-                                ? Border.all(color: AppTheme.primaryColor, width: 2)
-                                : null,
-                          ),
-                          child: Icon(
-                            icon,
-                            size: 24,
-                            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade600,
-                          ),
-                        ),
-                      );
-                    },
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Pilih Warna',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 80,
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                      ),
+                      itemCount: _categoryColors.length,
+                      itemBuilder: (context, index) {
+                        final color = _categoryColors[index];
+                        final isSelected = color == selectedColor;
+                        return GestureDetector(
+                          onTap: () => setDialogState(() => selectedColor = color),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
+                            ),
+                            child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -219,6 +259,7 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                         await ref.read(customCategoriesProvider.notifier).addCategory(
                               name,
                               selectedIconCodePoint,
+                              colorValue: selectedColor.toARGB32(),
                             );
                         if (ctx.mounted) Navigator.pop(ctx);
                         HapticFeedback.lightImpact();
