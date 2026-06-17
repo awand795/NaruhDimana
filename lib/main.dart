@@ -19,6 +19,7 @@ import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/manage_categories_screen.dart';
 import 'features/settings/about_screen.dart';
 import 'features/settings/privacy_policy_screen.dart';
+import 'features/search/search_screen.dart';
 import 'features/settings/edit_profile_screen.dart';
 import 'data/models/item_model.dart';
 import 'services/notification_service.dart';
@@ -116,6 +117,11 @@ class NaruhDimanaApp extends StatelessWidget {
               case AppRoutes.home:
                 return MaterialPageRoute(
                   builder: (_) => const AppShell(),
+                );
+              case AppRoutes.search:
+                final categoryArg = settings.arguments as String?;
+                return MaterialPageRoute(
+                  builder: (_) => SearchScreen(initialCategory: categoryArg),
                 );
               case AppRoutes.addItem:
                 return MaterialPageRoute(

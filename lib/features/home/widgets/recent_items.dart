@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,11 +31,18 @@ class RecentItems extends ConsumerWidget {
                 'Baru Ditambahkan',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              Text(
-                'Lihat semua',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.primaryColor,
-                    ),
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.pushNamed(context, AppRoutes.search);
+                },
+                child: Text(
+                  'Lihat semua →',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
               ),
             ],
           ),
@@ -62,7 +70,8 @@ class RecentItems extends ConsumerWidget {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final cat = findCategoryBySlugOrFallback(
-                    allCategories, items[index].category,
+                    allCategories,
+                    items[index].category,
                   );
                   return _RecentItemCard(
                     item: items[index],
@@ -129,6 +138,8 @@ class _RecentItemCardState extends State<_RecentItemCard> {
     final dateStr = DateFormat('dd MMM').format(
       DateTime.parse(widget.item.createdAt),
     );
+    final catColor =
+        AppTheme.getCategoryColor(widget.category.slug, context);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -143,7 +154,7 @@ class _RecentItemCardState extends State<_RecentItemCard> {
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
-        duration: const Duration(milliseconds: 100),
+        duration: AppTheme.microDuration,
         curve: Curves.easeOut,
         child: Container(
           width: 160,
@@ -165,19 +176,19 @@ class _RecentItemCardState extends State<_RecentItemCard> {
                   child: Container(
                     height: 90,
                     width: double.infinity,
-                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    color: catColor.withValues(alpha: 0.1),
                     child: widget.item.photoPath != null
                         ? Image.file(
                             File(widget.item.photoPath!),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Center(
                               child: Icon(widget.category.icon,
-                                  color: AppTheme.primaryColor, size: 32),
+                                  color: catColor, size: 32),
                             ),
                           )
                         : Center(
                             child: Icon(widget.category.icon,
-                                color: AppTheme.primaryColor, size: 32),
+                                color: catColor, size: 32),
                           ),
                   ),
                 ),
@@ -210,13 +221,13 @@ class _RecentItemCardState extends State<_RecentItemCard> {
                     Row(
                       children: [
                         Icon(widget.category.icon,
-                            size: 12, color: AppTheme.primaryColor),
+                            size: 12, color: catColor),
                         const SizedBox(width: 4),
                         Text(
                           widget.category.name,
                           style: TextStyle(
                             fontSize: 10,
-                            color: AppTheme.primaryColor,
+                            color: catColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -238,8 +249,8 @@ class _RecentItemCardState extends State<_RecentItemCard> {
         ),
       ),
     ).animate().fadeIn(
-      duration: 400.ms,
-      delay: (widget.index * 100).ms,
+      duration: AppTheme.shortDuration,
+      delay: (widget.index * 80).ms,
       curve: Curves.easeOut,
     ).slideX(begin: 0.1);
   }

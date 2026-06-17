@@ -12,6 +12,39 @@ class AppTheme {
   static const Color onSurface = Color(0xFF1A1D2E);
   static const Color textSecondary = Color(0xFF6B7280);
 
+  // Duration constants for animations
+  static const Duration microDuration = Duration(milliseconds: 150);
+  static const Duration shortDuration = Duration(milliseconds: 250);
+  static const Duration mediumDuration = Duration(milliseconds: 350);
+
+  // Semantic category colors per kategori
+  static const Map<String, Color> categoryColors = {
+    'dokumen':    Color(0xFF3B8BD4),
+    'kunci':      Color(0xFFEF9F27),
+    'obat':       Color(0xFFE24B4A),
+    'elektronik': Color(0xFF534AB7),
+    'pakaian':    Color(0xFFD4537E),
+    'perkakas':   Color(0xFF639922),
+    'lainnya':    Color(0xFF888780),
+  };
+
+  static Color getCategoryColor(String slug, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      const dark = {
+        'dokumen': Color(0xFF7B93FF),
+        'kunci': Color(0xFFFFB84D),
+        'obat': Color(0xFFEF5350),
+        'elektronik': Color(0xFFAFA9EC),
+        'pakaian': Color(0xFFED93B1),
+        'perkakas': Color(0xFF97C459),
+        'lainnya': Color(0xFFB4B2A9),
+      };
+      return dark[slug] ?? dark['lainnya']!;
+    }
+    return categoryColors[slug] ?? categoryColors['lainnya']!;
+  }
+
   // Glassmorphism helper
   static BoxDecoration glassDecoration({
     double blur = 20,
@@ -222,19 +255,31 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
       ),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    navigationBarTheme: NavigationBarThemeData(
+      elevation: 0,
+      height: 64,
       backgroundColor: surface,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: textSecondary,
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-      selectedLabelStyle: GoogleFonts.inter(
-        fontWeight: FontWeight.w600,
-        fontSize: 12,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: primaryColor.withValues(alpha: 0.1),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      unselectedLabelStyle: GoogleFonts.inter(
-        fontSize: 12,
-      ),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? primaryColor : textSecondary,
+          size: 22,
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return GoogleFonts.inter(
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          fontSize: 11,
+          color: selected ? primaryColor : textSecondary,
+        );
+      }),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
@@ -245,12 +290,6 @@ class AppTheme {
     dividerTheme: DividerThemeData(
       color: Colors.grey.shade200,
       thickness: 1,
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      indicatorColor: primaryColor.withValues(alpha: 0.12),
-      backgroundColor: surface.withValues(alpha: 0.95),
     ),
   );
 
@@ -317,13 +356,6 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: const Color(0xFF1E2030),
-      selectedItemColor: const Color(0xFF7B93FF),
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-    ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: const Color(0xFF7B93FF),
       foregroundColor: Colors.white,
@@ -333,10 +365,30 @@ class AppTheme {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.3),
-      indicatorColor: const Color(0xFF7B93FF).withValues(alpha: 0.15),
-      backgroundColor: const Color(0xFF1E2030).withValues(alpha: 0.95),
+      elevation: 0,
+      height: 64,
+      backgroundColor: const Color(0xFF1E2030),
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: const Color(0xFF7B93FF).withValues(alpha: 0.1),
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? const Color(0xFF7B93FF) : Colors.grey,
+          size: 22,
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return GoogleFonts.inter(
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          fontSize: 11,
+          color: selected ? const Color(0xFF7B93FF) : Colors.grey,
+        );
+      }),
     ),
   );
 }

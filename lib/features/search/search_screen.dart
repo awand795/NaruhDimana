@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/search_provider.dart';
+import '../../providers/search_history_provider.dart';
 import '../../data/models/item_model.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../core/theme.dart';
@@ -16,7 +17,9 @@ import '../../services/image_service.dart';
 import '../../services/notification_service.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  final String? initialCategory;
+
+  const SearchScreen({super.key, this.initialCategory});
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -38,6 +41,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _focusNode.addListener(() {
       setState(() => _isSearchFocused = _focusNode.hasFocus);
     });
+    // Apply initial category filter if provided via route arguments
+    if (widget.initialCategory != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedCategoryFilterProvider.notifier).state =
+            widget.initialCategory;
+        _performSearch(' ');
+      });
+    }
   }
 
   @override
@@ -75,6 +86,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
       if (mounted) {
         setState(() => _searchResults = results);
+        // Simpan history hanya jika ada hasil
+        if (results.isNotEmpty && query.trim().length >= 2) {
+          ref.read(searchHistoryProvider.notifier).add(query);
+        }
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -394,25 +409,116 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               },
             )
           else
-            SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(48),
-                  child: Column(
-                    children: [
-                      Icon(Icons.search, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Cari barangmu',
-                        style: Theme.of(context).textTheme.titleMedium,
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.07),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Ketikan nama barang untuk mulai mencari',
-                        style: TextStyle(color: AppTheme.textSecondary),
-                      ),
-                    ],
-                  ),
+                      child: Icon(Icons.search_rounded,
+                          size: 36,
+                          color: AppTheme.primaryColor.withValues(alpha: 0.5)),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Cari barangmu',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text('Nama, lokasi, atau catatan',
+                        style: TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 13)),
+                    const SizedBox(height: 24),
+
+                    // Search history
+                    Consumer(builder: (ctx, ref, _) {
+                      final history = ref.watch(searchHistoryProvider);
+                      if (history.isEmpty) return const SizedBox.shrink();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Pencarian terakhir',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                          color: AppTheme.textSecondary)),
+                              TextButton(
+                                onPressed: () => ref
+                                    .read(searchHistoryProvider.notifier)
+                                    .clear(),
+                                child: const Text('Hapus',
+                                    style: TextStyle(fontSize: 12)),
+                                style: TextButton.styleFrom(
+                                    visualDensity: VisualDensity.compact),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: history
+                                .map((q) => ActionChip(
+                                      avatar: const Icon(Icons.history_rounded,
+                                          size: 14),
+                                      label: Text(q,
+                                          style: const TextStyle(fontSize: 12)),
+                                      onPressed: () {
+                                        _searchController.text = q;
+                                        _performSearch(q);
+                                      },
+                                    ))
+                                .toList(),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }),
+
+                    // Category quick access
+                    Consumer(builder: (ctx, ref, _) {
+                      final cats = ref
+                              .watch(mergedCategoriesProvider)
+                              .valueOrNull ??
+                          [];
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: cats.take(5).map((cat) {
+                          final color =
+                              AppTheme.getCategoryColor(cat.slug, context);
+                          return ActionChip(
+                            avatar: Icon(cat.icon, size: 14, color: color),
+                            label: Text(cat.name,
+                                style:
+                                    TextStyle(fontSize: 12, color: color)),
+                            backgroundColor: color.withValues(alpha: 0.07),
+                            side: BorderSide(
+                                color: color.withValues(alpha: 0.2),
+                                width: 0.5),
+                            onPressed: () {
+                              ref
+                                  .read(selectedCategoryFilterProvider
+                                      .notifier)
+                                  .state = cat.slug;
+                              _performSearch(' ');
+                            },
+                          );
+                        }).toList(),
+                      );
+                    }),
+                  ],
                 ),
               ),
             ),
@@ -542,6 +648,8 @@ class _SearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final catColor = AppTheme.getCategoryColor(category.slug, context);
+
     return Dismissible(
       key: Key(item.id.toString()),
       direction: DismissDirection.endToStart,
@@ -590,15 +698,15 @@ class _SearchResultItem extends StatelessWidget {
             child: Container(
               width: 52,
               height: 52,
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              color: catColor.withValues(alpha: 0.1),
               child: item.photoPath != null
                   ? Image.file(
                       File(item.photoPath!),
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
-                          Icon(category.icon, color: AppTheme.primaryColor),
+                          Icon(category.icon, color: catColor),
                     )
-                  : Icon(category.icon, color: AppTheme.primaryColor),
+                  : Icon(category.icon, color: catColor),
             ),
           ),
           title: Text(
@@ -625,14 +733,14 @@ class _SearchResultItem extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      color: catColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       category.name,
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.primaryColor,
+                        color: catColor,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

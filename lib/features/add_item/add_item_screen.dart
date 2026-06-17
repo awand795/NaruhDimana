@@ -52,6 +52,35 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     super.dispose();
   }
 
+  Widget _sectionHeader(
+      BuildContext context, String title, IconData icon, int step, int totalSteps) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: AppTheme.primaryColor),
+          ),
+          const SizedBox(width: 10),
+          Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          )),
+          const Spacer(),
+          Text(
+            '$step / $totalSteps',
+            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final status = await Permission.camera.request();
     if (!status.isGranted) {
@@ -242,7 +271,8 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Photo section
+            // Section 1: Foto
+            _sectionHeader(context, 'Foto', Icons.camera_alt_outlined, 1, 4),
             GestureDetector(
               onTap: () => _showImagePickerOptions(context),
               child: Container(
@@ -312,7 +342,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                       ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+
+            // Section 2: Info barang
+            _sectionHeader(context, 'Info barang', Icons.info_outline_rounded, 2, 4),
 
             // Item Name
             TextFormField(
@@ -350,7 +383,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Category picker
+            // Category picker — Wrap style like QuickAddSheet
             Text(
               'Kategori',
               style: Theme.of(context).textTheme.labelLarge,
@@ -360,50 +393,59 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               builder: (context, ref, _) {
                 final mergedAsync = ref.watch(mergedCategoriesProvider);
                 return mergedAsync.when(
-                  data: (categories) => SizedBox(
-                    height: 44,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        ...categories.map((cat) {
-                          final isSelected = _selectedCategory == cat.slug;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    cat.icon,
-                                    size: 18,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : AppTheme.primaryColor,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    cat.name,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : AppTheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              selected: isSelected,
-                              selectedColor: AppTheme.primaryColor,
-                              labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppTheme.onSurface,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              onSelected: (_) =>
-                                  setState(() => _selectedCategory = cat.slug),
+                  data: (categories) => Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: categories.map((cat) {
+                      final isSelected = _selectedCategory == cat.slug;
+                      final catColor =
+                          AppTheme.getCategoryColor(cat.slug, context);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedCategory = cat.slug);
+                        },
+                        child: AnimatedContainer(
+                          duration: AppTheme.microDuration,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? catColor.withValues(alpha: 0.12)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? catColor
+                                  : AppTheme.textSecondary
+                                      .withValues(alpha: 0.25),
+                              width: isSelected ? 1.5 : 0.5,
                             ),
-                          );
-                        }),
-                      ],
-                    ),
+                          ),
+                          child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(cat.icon,
+                                    size: 16,
+                                    color: isSelected
+                                        ? catColor
+                                        : AppTheme.textSecondary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  cat.name,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isSelected
+                                        ? catColor
+                                        : AppTheme.textSecondary,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ]),
+                        ),
+                      );
+                    }).toList(),
                   ),
                   loading: () => const SizedBox(
                     height: 44,
@@ -425,14 +467,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               ),
               textCapitalization: TextCapitalization.none,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // GPS Location
-            Text(
-              'Lokasi GPS',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
+            // Section 3: Lokasi GPS
+            _sectionHeader(context, 'Lokasi GPS', Icons.map_outlined, 3, 4),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -483,7 +521,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                 ),
               ),
             ],
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Notes
             TextFormField(
@@ -497,11 +535,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Reminder
-            Text('Pengingat', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
+            // Section 4: Pengingat
+            _sectionHeader(context, 'Pengingat', Icons.alarm_outlined, 4, 4),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(

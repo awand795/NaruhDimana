@@ -1,6 +1,7 @@
 class AppRoutes {
   static const String splash = '/splash';
   static const String home = '/';
+  static const String search = '/search';
   static const String addItem = '/add-item';
   static const String editItem = '/edit-item';
   static const String detailItem = '/detail-item';

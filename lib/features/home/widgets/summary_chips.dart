@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../providers/item_provider.dart';
 import '../../../core/theme.dart';
+import '../../../core/router.dart';
 
 class SummaryChips extends ConsumerWidget {
   const SummaryChips({super.key});
@@ -15,7 +17,7 @@ class SummaryChips extends ConsumerWidget {
     return statsAsync.when(
       data: (stats) {
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Row(
             children: [
               _ChipCard(
@@ -24,29 +26,32 @@ class SummaryChips extends ConsumerWidget {
                 value: '${stats['total'] ?? 0}',
                 color: AppTheme.primaryColor,
                 delay: 0,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.search, arguments: null),
               ),
               const SizedBox(width: 10),
               _ChipCard(
                 icon: Icons.notifications_active,
                 label: 'Pengingat',
                 value: '${stats['reminders'] ?? 0}',
-                color: AppTheme.secondaryColor,
+                color: const Color(0xFFEF9F27),
                 delay: 80,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.search, arguments: null),
               ),
               const SizedBox(width: 10),
               _ChipCard(
                 icon: Icons.location_on,
                 label: 'GPS',
                 value: '${stats['gps'] ?? 0}',
-                color: Colors.green,
+                color: const Color(0xFF1D9E75),
                 delay: 160,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.search, arguments: null),
               ),
             ],
           ),
         );
       },
       loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Shimmer.fromColors(
           baseColor: Colors.grey.shade300,
           highlightColor: Colors.grey.shade100,
@@ -55,7 +60,7 @@ class SummaryChips extends ConsumerWidget {
               3,
               (_) => Expanded(
                 child: Container(
-                  height: 72,
+                  height: 60,
                   margin: const EdgeInsets.symmetric(horizontal: 5),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -78,6 +83,7 @@ class _ChipCard extends StatefulWidget {
   final String value;
   final Color color;
   final int delay;
+  final VoidCallback? onTap;
 
   const _ChipCard({
     required this.icon,
@@ -85,6 +91,7 @@ class _ChipCard extends StatefulWidget {
     required this.value,
     required this.color,
     required this.delay,
+    this.onTap,
   });
 
   @override
@@ -99,18 +106,24 @@ class _ChipCardState extends State<_ChipCard> {
     return Expanded(
       child: GestureDetector(
         onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          if (widget.onTap != null) {
+            HapticFeedback.selectionClick();
+            widget.onTap!();
+          }
+        },
         onTapCancel: () => setState(() => _isPressed = false),
         child: AnimatedScale(
           scale: _isPressed ? 0.93 : 1.0,
-          duration: const Duration(milliseconds: 100),
+          duration: AppTheme.microDuration,
           curve: Curves.easeOut,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: AppTheme.microDuration,
             transform: _isPressed
                 ? Matrix4.translationValues(0.0, 2.0, 0.0)
                 : Matrix4.identity(),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: widget.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
@@ -129,12 +142,12 @@ class _ChipCardState extends State<_ChipCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.icon, color: widget.color, size: 20),
-                const SizedBox(height: 4),
+                Icon(widget.icon, color: widget.color, size: 18),
+                const SizedBox(height: 2),
                 Text(
                   widget.value,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: widget.color,
                   ),
@@ -142,7 +155,7 @@ class _ChipCardState extends State<_ChipCard> {
                 Text(
                   widget.label,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: widget.color.withValues(alpha: 0.8),
                   ),
                 ),
@@ -152,7 +165,7 @@ class _ChipCardState extends State<_ChipCard> {
         ),
       ),
     ).animate().fadeIn(
-      duration: 350.ms,
+      duration: AppTheme.shortDuration,
       delay: (widget.delay).ms,
       curve: Curves.easeOut,
     ).slideY(begin: 0.15);

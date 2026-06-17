@@ -94,7 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: page.color,
                           ),
                         ).animate().scale(
-                          duration: 600.ms,
+                          duration: AppTheme.mediumDuration,
                           curve: Curves.elasticOut,
                           begin: const Offset(0, 0),
                         ),
@@ -107,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ?.copyWith(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ).animate().fadeIn(
-                          duration: 500.ms,
+                          duration: AppTheme.shortDuration,
                           delay: 200.ms,
                           curve: Curves.easeOut,
                         ).slideY(begin: 0.1),
@@ -123,8 +123,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                           textAlign: TextAlign.center,
                         ).animate().fadeIn(
-                          duration: 500.ms,
-                          delay: 350.ms,
+                          duration: AppTheme.shortDuration,
+                          delay: 250.ms,
                           curve: Curves.easeOut,
                         ).slideY(begin: 0.1),
                       ],

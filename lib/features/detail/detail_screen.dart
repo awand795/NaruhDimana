@@ -199,6 +199,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     final mergedAsync = ref.watch(mergedCategoriesProvider);
     final allCategories = mergedAsync.valueOrNull ?? [];
     final category = findCategoryBySlugOrFallback(allCategories, _item.category);
+    final catColor = AppTheme.getCategoryColor(_item.category, context);
 
     return Scaffold(
       body: CustomScrollView(
@@ -213,9 +214,10 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                     ? Image.file(
                         File(_item.photoPath!),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildPlaceholder(category),
+                        errorBuilder: (_, __, ___) =>
+                            _buildPlaceholder(category, catColor),
                       )
-                    : _buildPlaceholder(category),
+                    : _buildPlaceholder(category, catColor),
               ),
             ),
             actions: [
@@ -238,6 +240,23 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                 },
                 tooltip: 'Edit',
               ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded),
+                onSelected: (v) {
+                  if (v == 'delete') _deleteItem();
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(children: [
+                      Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                      SizedBox(width: 10),
+                      Text('Hapus barang',
+                          style: TextStyle(color: Colors.red)),
+                    ]),
+                  ),
+                ],
+              ),
             ],
           ),
           SliverToBoxAdapter(
@@ -253,26 +272,26 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Category badge
+                  // Category badge with semantic color
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      color: catColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(category.icon,
-                            size: 16, color: AppTheme.primaryColor),
+                            size: 16, color: catColor),
                         const SizedBox(width: 6),
                         Text(
                           category.name,
                           style: TextStyle(
-                            color: AppTheme.primaryColor,
+                            color: catColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -369,7 +388,8 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                             children: [
                               TileLayer(
                                 urlTemplate: AppConstants.mapTileUrl,
-                                userAgentPackageName: 'com.naruhdimana.naruh_dimana',
+                                userAgentPackageName:
+                                    'com.naruhdimana.naruh_dimana',
                               ),
                               MarkerLayer(
                                 markers: [
@@ -440,7 +460,8 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                               children: [
                                 Text(
                                   DateFormat('dd MMMM yyyy, HH:mm', 'id')
-                                      .format(DateTime.parse(_item.reminderTime!)),
+                                      .format(
+                                          DateTime.parse(_item.reminderTime!)),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -459,18 +480,20 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, size: 20),              onPressed: () {
-                _notificationService.cancelNotification(_item.id!);
-                final updatedItem = _item.copyWith(
-                  reminderTime: null,
-                  reminderRepeat: 'none',
-                  updatedAt: DateTime.now().toIso8601String(),
-                );
-                ref
-                    .read(itemsProvider.notifier)
-                    .updateItem(updatedItem);
-                setState(() => _item = updatedItem);
-              },
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () {
+                              _notificationService
+                                  .cancelNotification(_item.id!);
+                              final updatedItem = _item.copyWith(
+                                reminderTime: null,
+                                reminderRepeat: 'none',
+                                updatedAt: DateTime.now().toIso8601String(),
+                              );
+                              ref
+                                  .read(itemsProvider.notifier)
+                                  .updateItem(updatedItem);
+                              setState(() => _item = updatedItem);
+                            },
                           ),
                         ],
                       ),
@@ -490,21 +513,6 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // Delete button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _deleteItem,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                      ),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Hapus Barang'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -514,11 +522,11 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
     );
   }
 
-  Widget _buildPlaceholder(MergedCategory category) {
+  Widget _buildPlaceholder(MergedCategory category, Color catColor) {
     return Container(
-      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+      color: catColor.withValues(alpha: 0.1),
       child: Center(
-        child: Icon(category.icon, size: 80, color: AppTheme.primaryColor),
+        child: Icon(category.icon, size: 80, color: catColor),
       ),
     );
   }
