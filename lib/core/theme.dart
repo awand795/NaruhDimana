@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,6 +18,26 @@ class AppTheme {
   static const Duration shortDuration = Duration(milliseconds: 250);
   static const Duration mediumDuration = Duration(milliseconds: 350);
 
+  // Gradient primaries for modern look
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFF4F6AF5), Color(0xFF7B93FF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient accentGradient = LinearGradient(
+    colors: [Color(0xFFF5A623), Color(0xFFFFC107)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static LinearGradient heroGradient = const LinearGradient(
+    colors: [Color(0xFF4F6AF5), Color(0xFF6C63FF), Color(0xFF7B93FF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    stops: [0.0, 0.5, 1.0],
+  );
+
   // Semantic category colors per kategori
   static const Map<String, Color> categoryColors = {
     'dokumen':    Color(0xFF3B8BD4),
@@ -27,6 +48,26 @@ class AppTheme {
     'perkakas':   Color(0xFF639922),
     'lainnya':    Color(0xFF888780),
   };
+
+  // Category gradients for modern card backgrounds
+  static const Map<String, List<Color>> categoryGradients = {
+    'dokumen':    [Color(0xFF3B8BD4), Color(0xFF6BA3E0)],
+    'kunci':      [Color(0xFFEF9F27), Color(0xFFF5B84D)],
+    'obat':       [Color(0xFFE24B4A), Color(0xFFEF6F6E)],
+    'elektronik': [Color(0xFF534AB7), Color(0xFF7B73CC)],
+    'pakaian':    [Color(0xFFD4537E), Color(0xFFE07A9B)],
+    'perkakas':   [Color(0xFF639922), Color(0xFF8ABF4D)],
+    'lainnya':    [Color(0xFF888780), Color(0xFFA8A59B)],
+  };
+
+  static LinearGradient getCategoryGradient(String slug) {
+    final colors = categoryGradients[slug] ?? categoryGradients['lainnya']!;
+    return LinearGradient(
+      colors: colors,
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
 
   static Color getCategoryColor(String slug, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -61,6 +102,35 @@ class AppTheme {
     );
   }
 
+  // Modern glass card with backdrop filter
+  static Widget glassCard({
+    required Widget child,
+    double radius = 20,
+    double blur = 20,
+    EdgeInsetsGeometry? padding,
+    EdgeInsetsGeometry? margin,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          margin: margin,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 0.5,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
   static List<BoxShadow> softShadow({
     Color color = Colors.black,
     double alpha = 0.06,
@@ -77,6 +147,25 @@ class AppTheme {
         color: color.withValues(alpha: alpha * 0.5),
         blurRadius: blur * 2,
         offset: Offset(0, y * 2),
+      ),
+    ];
+  }
+
+  // Modern elevated shadow
+  static List<BoxShadow> elevatedShadow({
+    Color color = Colors.black,
+    double alpha = 0.1,
+  }) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: alpha),
+        blurRadius: 16,
+        offset: const Offset(0, 4),
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: alpha * 0.4),
+        blurRadius: 24,
+        offset: const Offset(0, 8),
       ),
     ];
   }

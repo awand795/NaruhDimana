@@ -19,6 +19,16 @@ class ImageService {
     return await _compressAndSave(image.path);
   }
 
+  Future<String?> pickFromGallery() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppConstants.maxImageWidth.toDouble(),
+      imageQuality: AppConstants.maxImageQuality,
+    );
+    if (image == null) return null;
+    return await _compressAndSave(image.path);
+  }
+
   Future<List<String>> pickMultipleFromGallery() async {
     final List<XFile> images = await _picker.pickMultiImage(
       maxWidth: AppConstants.maxImageWidth.toDouble(),

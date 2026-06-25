@@ -17,31 +17,55 @@ class SmartNudge extends ConsumerWidget {
         if (nudge == null) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: nudge.color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: nudge.color.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
+              gradient: nudge.gradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: nudge.color.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                Icon(nudge.icon, color: nudge.color, size: 20),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(nudge.icon, color: Colors.white, size: 20),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     nudge.message,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: nudge.color,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
               ],
             ),
           ),
@@ -67,6 +91,11 @@ class SmartNudge extends ConsumerWidget {
         icon: Icons.notifications_active_rounded,
         message: '$reminders pengingat aktif hari ini. Jangan lupa dicek ya!',
         color: const Color(0xFFEF9F27),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEF9F27), Color(0xFFFFC107)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       );
     }
 
@@ -76,6 +105,7 @@ class SmartNudge extends ConsumerWidget {
         icon: Icons.add_box_rounded,
         message: 'Mulai simpan barang pertamamu agar tidak lupa di mana naruhnya.',
         color: AppTheme.primaryColor,
+        gradient: AppTheme.primaryGradient,
       );
     }
 
@@ -85,6 +115,11 @@ class SmartNudge extends ConsumerWidget {
         icon: Icons.wb_sunny_rounded,
         message: 'Selamat pagi! Sudah siap bawa barang pentingmu hari ini?',
         color: const Color(0xFF3B8BD4),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3B8BD4), Color(0xFF5BA3E8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       );
     }
 
@@ -93,7 +128,12 @@ class SmartNudge extends ConsumerWidget {
       return _NudgeData(
         icon: Icons.location_on_rounded,
         message: 'Beberapa barangmu belum ada koordinat GPS-nya nih.',
-        color: Colors.teal,
+        color: const Color(0xFF1D9E75),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1D9E75), Color(0xFF43A47A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       );
     }
 
@@ -103,6 +143,11 @@ class SmartNudge extends ConsumerWidget {
         icon: Icons.inventory_rounded,
         message: 'Waktunya audit santai! Masih ingat posisi semua barangmu?',
         color: Colors.indigo,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3F51B5), Color(0xFF5C6BC0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       );
     }
 
@@ -111,6 +156,11 @@ class SmartNudge extends ConsumerWidget {
       icon: Icons.lightbulb_outline_rounded,
       message: 'Tips: Tambahkan foto nota pembelian ke barang agar garansi aman.',
       color: Colors.amber.shade700,
+      gradient: const LinearGradient(
+        colors: [Color(0xFFE65100), Color(0xFFFF8F00)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
     );
   }
 }
@@ -119,10 +169,12 @@ class _NudgeData {
   final IconData icon;
   final String message;
   final Color color;
+  final LinearGradient gradient;
 
   const _NudgeData({
     required this.icon,
     required this.message,
     required this.color,
+    required this.gradient,
   });
 }

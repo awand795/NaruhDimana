@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme.dart';
 import '../../core/router.dart';
-import 'widgets/summary_chips.dart';
+import '../../providers/user_profile_provider.dart';
+import '../../providers/item_provider.dart';
+import 'widgets/hero_balance_card.dart';
+import 'widgets/quick_action_row.dart';
 import 'widgets/recent_items.dart';
 import 'widgets/category_grid.dart';
 import 'widgets/smart_nudge.dart';
@@ -50,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showQuickAddSheet(BuildContext context) {
+    HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -66,126 +69,252 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateFormat('EEEE, d MMMM yyyy', 'id').format(DateTime.now());
+    final profile = ref.watch(userProfileProvider);
+    final statsAsync = ref.watch(itemStatsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
+          // --- Modern Personalized Header ---
           SliverAppBar(
-            expandedHeight: 140,
-            floating: true,
+            expandedHeight: 120,
             pinned: true,
+            floating: true,
             snap: true,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             scrolledUnderElevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.zero,
-              expandedTitleScale: 1.0,
-              title: Container(
-                padding: const EdgeInsets.fromLTRB(20, 0, 16, 12),
-                alignment: Alignment.bottomLeft,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getGreeting(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: isDark
+                    ? LinearGradient(
+                        colors: [
+                          const Color(0xFF121420),
+                          const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      )
+                    : LinearGradient(
+                        colors: [
+                          AppTheme.primaryColor.withValues(alpha: 0.04),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+              ),
+              child: FlexibleSpaceBar(
+                titlePadding: EdgeInsets.zero,
+                expandedTitleScale: 1.0,
+                title: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 16, 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Avatar with ring
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppTheme.primaryGradient,
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: profile.photoPath != null
+                                ? null
+                                : Text(
+                                    profile.name.isNotEmpty
+                                        ? profile.name[0].toUpperCase()
+                                        : 'U',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                  ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            today,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Greeting and name
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  _getGreeting(),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
+                                const SizedBox(width: 6),
+                                Text('👋'),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              profile.name.isNotEmpty
+                                  ? profile.name
+                                  : 'Pengguna Baru',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Notification bell with badge
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                            },
+                            style: IconButton.styleFrom(
+                              backgroundColor: isDark
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : AppTheme.primaryColor
+                                      .withValues(alpha: 0.06),
+                              foregroundColor: isDark
+                                  ? Colors.white
+                                  : AppTheme.primaryColor,
+                              minimumSize: const Size(40, 40),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFEF5350),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    // Notification/bell icon
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {},
-                      style: IconButton.styleFrom(
-                        backgroundColor:
-                            AppTheme.primaryColor.withValues(alpha: 0.06),
-                        foregroundColor: AppTheme.primaryColor,
-                        minimumSize: const Size(40, 40),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+          // --- Hero Balance Card (like Telkomsel) ---
           SliverToBoxAdapter(
-            child: SummaryChips().animate().fadeIn(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: HeroBalanceCard(statsAsync: statsAsync),
+            ).animate().fadeIn(
+              duration: AppTheme.shortDuration,
+              delay: 50.ms,
+              curve: Curves.easeOut,
+            ).slideY(begin: 0.1),
+          ),
+
+          // --- Quick Actions Row ---
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: QuickActionRow(
+                onTapAdd: () => _showQuickAddSheet(context),
+                onTapScan: () {},
+                onTapSearch: () => Navigator.pushNamed(context, AppRoutes.search),
+                onTapMap: () {},
+              ),
+            ).animate().fadeIn(
               duration: AppTheme.shortDuration,
               delay: 100.ms,
               curve: Curves.easeOut,
             ).slideY(begin: 0.1),
           ),
+
+          // --- Smart Nudge Banner ---
           SliverToBoxAdapter(
-            child: SmartNudge(),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: SmartNudge(),
+            ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+          // --- Recent Items ---
           SliverToBoxAdapter(
-            child: RecentItems().animate().fadeIn(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: RecentItems(),
+            ).animate().fadeIn(
+              duration: AppTheme.shortDuration,
+              delay: 150.ms,
+              curve: Curves.easeOut,
+            ).slideY(begin: 0.1),
+          ),
+
+          // --- Category Grid ---
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: CategoryGrid(),
+            ).animate().fadeIn(
               duration: AppTheme.shortDuration,
               delay: 200.ms,
               curve: Curves.easeOut,
             ).slideY(begin: 0.1),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          SliverToBoxAdapter(
-            child: CategoryGrid().animate().fadeIn(
-              duration: AppTheme.shortDuration,
-              delay: 300.ms,
-              curve: Curves.easeOut,
-            ).slideY(begin: 0.1),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+
+          // Bottom padding for FAB + nav bar
+          const SliverToBoxAdapter(child: SizedBox(height: 90)),
         ],
       ),
-      floatingActionButton: AnimatedSlide(
+      floatingActionButton: AnimatedScale(
+        scale: _isFabVisible ? 1.0 : 0.0,
         duration: AppTheme.shortDuration,
-        offset: _isFabVisible ? Offset.zero : const Offset(0, 2),
-        child: AnimatedOpacity(
-          duration: AppTheme.shortDuration,
-          opacity: _isFabVisible ? 1.0 : 0.0,
-          child: FloatingActionButton.extended(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              _showQuickAddSheet(context);
-            },
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Tambah'),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ).animate().scale(
-            duration: AppTheme.shortDuration,
-            delay: 300.ms,
-            curve: Curves.elasticOut,
-            begin: const Offset(0, 0),
+        curve: Curves.elasticOut,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _showQuickAddSheet(context);
+          },
+          icon: const Icon(Icons.add_rounded),
+          label: const Text(
+            'Tambah Barang',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ).animate().scale(
+          duration: 600.ms,
+          delay: 300.ms,
+          curve: Curves.elasticOut,
+          begin: const Offset(0, 0),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

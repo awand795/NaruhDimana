@@ -1,11 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../providers/item_provider.dart';
-import '../../../core/constants.dart';
 import '../../../core/theme.dart';
 import '../../../core/category_helper.dart';
 import '../../../core/router.dart';
@@ -167,12 +165,40 @@ class _BentoTile extends StatelessWidget {
         child: Container(
           height: isLarge ? 80 : 64,
           decoration: BoxDecoration(
-            color: baseColor.withValues(alpha: isDark ? 0.15 : 0.08),
+            gradient: isDark
+                ? LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.surface,
+                      baseColor.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [
+                      Colors.white,
+                      baseColor.withValues(alpha: 0.04),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: baseColor.withValues(alpha: isDark ? 0.25 : 0.15),
+              color: baseColor.withValues(alpha: 0.2),
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: baseColor.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+              BoxShadow(
+                color: baseColor.withValues(alpha: 0.03),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Stack(
             children: [
@@ -184,7 +210,7 @@ class _BentoTile extends StatelessWidget {
                   child: Icon(
                     category.icon,
                     size: 80,
-                    color: baseColor.withValues(alpha: 0.05),
+                    color: baseColor.withValues(alpha: 0.08),
                   ),
                 ),
               Padding(
@@ -198,7 +224,14 @@ class _BentoTile extends StatelessWidget {
                       width: isLarge ? 48 : 38,
                       height: isLarge ? 48 : 38,
                       decoration: BoxDecoration(
-                        color: baseColor.withValues(alpha: 0.12),
+                        gradient: LinearGradient(
+                          colors: [
+                            baseColor.withValues(alpha: 0.2),
+                            baseColor.withValues(alpha: 0.08),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
@@ -223,16 +256,29 @@ class _BentoTile extends StatelessWidget {
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
-                          Text(
-                            '$count barang',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: baseColor.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w500,
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: baseColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$count barang',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: baseColor,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: baseColor.withValues(alpha: 0.3),
+                      size: 20,
                     ),
                   ],
                 ),
