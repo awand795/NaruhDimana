@@ -23,14 +23,11 @@ class RecentItems extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Baru Ditambahkan',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Baru Ditambahkan', style: Theme.of(context).textTheme.titleMedium),
               GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
@@ -39,9 +36,9 @@ class RecentItems extends ConsumerWidget {
                 child: Text(
                   'Lihat semua →',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -53,12 +50,10 @@ class RecentItems extends ConsumerWidget {
             final allCategories = mergedAsync.valueOrNull ?? [];
             if (items.isEmpty) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   'Belum ada barang. Tambahkan barang pertamamu!',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
                 ),
               );
             }
@@ -66,18 +61,11 @@ class RecentItems extends ConsumerWidget {
               height: 180,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: items.length,
                 itemBuilder: (context, index) {
-                  final cat = findCategoryBySlugOrFallback(
-                    allCategories,
-                    items[index].category,
-                  );
-                  return _RecentItemCard(
-                    item: items[index],
-                    category: cat,
-                    index: index,
-                  );
+                  final cat = findCategoryBySlugOrFallback(allCategories, items[index].category);
+                  return _RecentItemCard(item: items[index], category: cat, index: index);
                 },
               ),
             );
@@ -97,16 +85,13 @@ class RecentItems extends ConsumerWidget {
         highlightColor: Colors.grey.shade100,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: 3,
           itemBuilder: (context, index) {
             return Container(
               width: 160,
               margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
             );
           },
         ),
@@ -120,11 +105,7 @@ class _RecentItemCard extends StatefulWidget {
   final MergedCategory category;
   final int index;
 
-  const _RecentItemCard({
-    required this.item,
-    required this.category,
-    required this.index,
-  });
+  const _RecentItemCard({required this.item, required this.category, required this.index});
 
   @override
   State<_RecentItemCard> createState() => _RecentItemCardState();
@@ -135,116 +116,85 @@ class _RecentItemCardState extends State<_RecentItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('dd MMM').format(
-      DateTime.parse(widget.item.createdAt),
-    );
-    final catColor =
-        AppTheme.getCategoryColor(widget.category.slug, context);
+    final dateStr = DateFormat('dd MMM').format(DateTime.parse(widget.item.createdAt));
+    final catColor = AppTheme.getCategoryColor(widget.category.slug, context);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
         setState(() => _isPressed = false);
-        Navigator.pushNamed(
-          context,
-          AppRoutes.detailItem,
-          arguments: widget.item,
-        );
+        Navigator.pushNamed(context, AppRoutes.detailItem, arguments: widget.item);
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
         duration: AppTheme.microDuration,
         curve: Curves.easeOut,
-        child: Container(
-          width: 160,
+        child: Card(
           margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppTheme.softShadow(),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: Hero(
-                  tag: 'item_photo_${widget.item.id}',
-                  child: Container(
-                    height: 90,
-                    width: double.infinity,
-                    color: catColor.withValues(alpha: 0.1),
-                    child: widget.item.photoPath != null
-                        ? Image.file(
-                            File(widget.item.photoPath!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Center(
-                              child: Icon(widget.category.icon,
-                                  color: catColor, size: 32),
-                            ),
-                          )
-                        : Center(
-                            child: Icon(widget.category.icon,
-                                color: catColor, size: 32),
-                          ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 160,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Hero(
+                    tag: 'item_photo_${widget.item.id}',
+                    child: Container(
+                      height: 90,
+                      width: double.infinity,
+                      color: catColor.withValues(alpha: 0.1),
+                      child: widget.item.photoPath != null
+                          ? Image.file(
+                              File(widget.item.photoPath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Icon(widget.category.icon, color: catColor, size: 32),
+                              ),
+                            )
+                          : Center(child: Icon(widget.category.icon, color: catColor, size: 32)),
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.item.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.item.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.item.location,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.textSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.item.location,
+                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(widget.category.icon,
-                            size: 12, color: catColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.category.name,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: catColor,
-                            fontWeight: FontWeight.w500,
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(widget.category.icon, size: 12, color: catColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.category.name,
+                            style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w500),
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const Spacer(),
+                          Text(dateStr, style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

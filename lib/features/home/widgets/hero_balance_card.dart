@@ -29,25 +29,88 @@ class HeroBalanceCard extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: isDark
             ? const LinearGradient(
-                colors: [Color(0xFF2A2520), Color(0xFF363029)],
+                colors: [Color(0xFF1E293B), Color(0xFF334155)],
               )
-            : const LinearGradient(
-                colors: [Color(0xFFC5705E), Color(0xFFB8907A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+            : AppTheme.heroGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.elevatedShadow(
-          color: isDark ? Colors.black : const Color(0xFFC5705E),
+          color: isDark ? Colors.black : AppTheme.primaryColor,
           alpha: isDark ? 0.3 : 0.2,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(total),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.inventory_2_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Barang',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$total barang',
+                      style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
-          _buildStatsRow(reminders, gps, stats, isDark),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                _StatItem(
+                  icon: Icons.notifications_active_rounded,
+                  value: '$reminders',
+                  label: 'Pengingat',
+                  color: const Color(0xFFF59E0B),
+                ),
+                _StatDivider(),
+                _StatItem(
+                  icon: Icons.location_on_rounded,
+                  value: '$gps',
+                  label: 'Dengan GPS',
+                  color: const Color(0xFF34D399),
+                ),
+                _StatDivider(),
+                _StatItem(
+                  icon: Icons.photo_camera_rounded,
+                  value: '${stats['total'] ?? 0}',
+                  label: 'Dengan Foto',
+                  color: const Color(0xFFA78BFA),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     ).animate().shimmer(
@@ -56,89 +119,9 @@ class HeroBalanceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(int total) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.inventory_2_rounded,
-            color: Colors.white,
-            size: 22,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Total Barang Tersimpan',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$total barang',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow(
-      int reminders, int gps, Map<String, int> stats, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          _StatItem(
-            icon: Icons.notifications_active_rounded,
-            value: '$reminders',
-            label: 'Pengingat',
-            color: const Color(0xFFD4A06A),
-          ),
-          _StatDivider(),
-          _StatItem(
-            icon: Icons.location_on_rounded,
-            value: '$gps',
-            label: 'Dengan GPS',
-            color: const Color(0xFF7C9A7A),
-          ),
-          _StatDivider(),
-          _StatItem(
-            icon: Icons.photo_camera_rounded,
-            value: '${stats['total'] ?? 0}',
-            label: 'Dengan Foto',
-            color: const Color(0xFFC58B6E),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildShimmer() {
     return Container(
-      height: 160,
+      height: 170,
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
         borderRadius: BorderRadius.circular(20),
@@ -153,12 +136,7 @@ class _StatItem extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _StatItem({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
+  const _StatItem({required this.icon, required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -172,22 +150,14 @@ class _StatItem extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
               ),
             ],
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.7),
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w500),
           ),
         ],
       ),

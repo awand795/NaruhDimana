@@ -242,10 +242,10 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                   const PopupMenuItem(
                     value: 'delete',
                     child: Row(children: [
-                      Icon(Icons.delete_outline, color: Color(0xFFC26A5E), size: 18),
+                      Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 18),
                       SizedBox(width: 10),
                       Text('Hapus barang',
-                          style: TextStyle(color: Color(0xFFC26A5E))),
+                          style: TextStyle(color: Color(0xFFDC2626))),
                     ]),
                   ),
                 ],
@@ -395,7 +395,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                                     height: 40,
                                     child: const Icon(
                                       Icons.location_on,
-                                      color: Color(0xFFC5705E),
+                                      color: Color(0xFF0D7377),
                                       size: 40,
                                     ),
                                   ),
@@ -436,16 +436,16 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD4A06A).withValues(alpha: 0.1),
+                        color: const Color(0xFF0D7377).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFFD4A06A).withValues(alpha: 0.3),
+                          color: const Color(0xFF0D7377).withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.notifications_active,
-                              color: const Color(0xFFD4A06A)),
+                              color: const Color(0xFF0D7377)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -596,7 +596,7 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: const Color(0xFFC5705E), size: 22),
+        Icon(icon, color: const Color(0xFF0D7377), size: 22),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

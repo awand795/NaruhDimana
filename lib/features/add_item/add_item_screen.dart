@@ -62,10 +62,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFFC5705E).withValues(alpha: 0.1),
+              color: const Color(0xFF0D7377).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: const Color(0xFFC5705E)),
+            child: Icon(icon, size: 16, color: const Color(0xFF0D7377)),
           ),
           const SizedBox(width: 10),
           Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -126,7 +126,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Lokasi disimpan: $address'),
-              backgroundColor: const Color(0xFF7C9A7A),
+              backgroundColor: const Color(0xFF059669),
             ),
           );
         }
@@ -135,7 +135,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Gagal mendapatkan lokasi. Pastikan GPS aktif.'),
-              backgroundColor: const Color(0xFFC26A5E),
+              backgroundColor: const Color(0xFFDC2626),
             ),
           );
         }
@@ -500,21 +500,21 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF7C9A7A).withValues(alpha: 0.08),
+                  color: const Color(0xFF059669).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF7C9A7A).withValues(alpha: 0.2)),
+                  border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.check_circle,
-                        color: const Color(0xFF7C9A7A), size: 18),
+                        color: const Color(0xFF059669), size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _address!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFF5A7A58),
+                          color: const Color(0xFF047857),
                         ),
                       ),
                     ),
@@ -567,7 +567,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                     }),
                     icon: const Icon(Icons.close, size: 16),
                     label: const Text('Hapus pengingat'),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFC26A5E)),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
                   ),
                 ],
               ),

@@ -18,61 +18,55 @@ class SmartNudge extends ConsumerWidget {
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: nudge.gradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: nudge.color.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+          child: Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: nudge.gradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: nudge.color.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Icon(nudge.icon, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    nudge.message,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    child: Icon(nudge.icon, color: Colors.white, size: 20),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      nudge.message,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white,
-                    size: 16,
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 16),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ).animate().fadeIn(
-          duration: AppTheme.shortDuration,
-          delay: 200.ms,
-        ).slideY(begin: 0.08);
+        ).animate().fadeIn(duration: AppTheme.shortDuration, delay: 200.ms).slideY(begin: 0.08);
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -93,7 +87,6 @@ class SmartNudge extends ConsumerWidget {
         gradient: AppTheme.accentGradient,
       );
     }
-
     if (total == 0) {
       return _NudgeData(
         icon: Icons.add_box_rounded,
@@ -102,42 +95,38 @@ class SmartNudge extends ConsumerWidget {
         gradient: AppTheme.primaryGradient,
       );
     }
-
     if (hour >= 6 && hour <= 9) {
       return _NudgeData(
         icon: Icons.wb_sunny_rounded,
         message: 'Selamat pagi! Sudah siap bawa barang pentingmu hari ini?',
         color: AppTheme.accentColor,
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4A06A), Color(0xFFE0B889)],
+          colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       );
     }
-
     if (total > 5 && itemsWithGps < (total / 2)) {
       return _NudgeData(
         icon: Icons.location_on_rounded,
         message: 'Beberapa barangmu belum ada koordinat GPS-nya nih.',
-        color: AppTheme.secondaryColor,
-        gradient: AppTheme.secondaryGradient,
-      );
-    }
-
-    if (hour >= 19 && hour <= 22) {
-      return _NudgeData(
-        icon: Icons.inventory_rounded,
-        message: 'Waktunya audit santai! Masih ingat posisi semua barangmu?',
-        color: const Color(0xFF7B8BA4),
+        color: const Color(0xFF059669),
         gradient: const LinearGradient(
-          colors: [Color(0xFF7B8BA4), Color(0xFF9EAEC4)],
+          colors: [Color(0xFF059669), Color(0xFF34D399)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       );
     }
-
+    if (hour >= 19 && hour <= 22) {
+      return _NudgeData(
+        icon: Icons.inventory_rounded,
+        message: 'Waktunya audit santai! Masih ingat posisi semua barangmu?',
+        color: AppTheme.secondaryColor,
+        gradient: AppTheme.secondaryGradient,
+      );
+    }
     return _NudgeData(
       icon: Icons.lightbulb_outline_rounded,
       message: 'Tips: Tambahkan foto nota pembelian ke barang agar garansi aman.',
@@ -153,10 +142,5 @@ class _NudgeData {
   final Color color;
   final LinearGradient gradient;
 
-  const _NudgeData({
-    required this.icon,
-    required this.message,
-    required this.color,
-    required this.gradient,
-  });
+  const _NudgeData({required this.icon, required this.message, required this.color, required this.gradient});
 }

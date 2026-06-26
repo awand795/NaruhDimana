@@ -22,19 +22,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _isFabVisible = true;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      final offset = _scrollController.offset;
-      if (offset > 100 && _isFabVisible) {
-        setState(() => _isFabVisible = false);
-      } else if (offset <= 100 && !_isFabVisible) {
-        setState(() => _isFabVisible = true);
-      }
-    });
   }
 
   @override
@@ -77,249 +68,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          // --- Modern Personalized Header ---
-          SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            floating: true,
-            snap: true,
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            scrolledUnderElevation: 0,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: isDark
-                    ? const LinearGradient(
-                        colors: [
-                          Color(0xFF1C1815),
-                          Color(0xFF2A2520),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      )
-                    : const LinearGradient(
-                        colors: [
-                          Color(0xFFF9F5F0),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-              ),
-              child: FlexibleSpaceBar(
-                titlePadding: EdgeInsets.zero,
-                expandedTitleScale: 1.0,
-                title: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 16, 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Avatar with ring
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppTheme.primaryGradient,
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDark
-                                  ? const Color(0xFF2A2520)
-                                  : Colors.white,
-                            ),
-                            child: profile.photoPath != null
-                                ? null
-                                : Text(
-                                    profile.name.isNotEmpty
-                                        ? profile.name[0].toUpperCase()
-                                        : 'U',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? const Color(0xFFD4836F)
-                                          : AppTheme.primaryColor,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Greeting and name
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  _getGreeting(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text('👋'),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              profile.name.isNotEmpty
-                                  ? profile.name
-                                  : 'Pengguna Baru',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Notification bell with badge
-                      Stack(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.notifications_outlined),
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                            },
-                            style: IconButton.styleFrom(
-                              backgroundColor: isDark
-                                  ? Colors.white.withValues(alpha: 0.06)
-                                  : const Color(0xFFC5705E)
-                                      .withValues(alpha: 0.06),
-                              foregroundColor: isDark
-                                  ? Colors.white
-                                  : const Color(0xFFC5705E),
-                              minimumSize: const Size(40, 40),
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFC26A5E),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // --- Hero Balance Card (like Telkomsel) ---
+          // ── Minimal Header ──────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: HeroBalanceCard(statsAsync: statsAsync),
-            ).animate().fadeIn(
-              duration: AppTheme.shortDuration,
-              delay: 50.ms,
-              curve: Curves.easeOut,
-            ).slideY(begin: 0.1),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Row(
+                children: [
+                  // Avatar
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppTheme.primaryGradient,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        ),
+                        child: profile.photoPath != null
+                            ? null
+                            : Text(
+                                profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'N',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_getGreeting()} 👋',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          profile.name.isNotEmpty ? profile.name : 'Pengguna Baru',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Notif icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : AppTheme.primaryColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.notifications_outlined, size: 20),
+                      onPressed: () => HapticFeedback.lightImpact(),
+                      color: isDark ? Colors.white : AppTheme.primaryColor,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.05),
           ),
 
-          // --- Quick Actions Row ---
+          // ── Hero Stats Card ─────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: HeroBalanceCard(statsAsync: statsAsync),
+            ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.06),
+          ),
+
+          // ── Quick Actions ───────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
               child: QuickActionRow(
                 onTapAdd: () => _showQuickAddSheet(context),
                 onTapScan: () {},
                 onTapSearch: () => Navigator.pushNamed(context, AppRoutes.search),
                 onTapMap: () {},
               ),
-            ).animate().fadeIn(
-              duration: AppTheme.shortDuration,
-              delay: 100.ms,
-              curve: Curves.easeOut,
-            ).slideY(begin: 0.1),
+            ).animate().fadeIn(duration: 400.ms, delay: 150.ms),
           ),
 
-          // --- Smart Nudge Banner ---
+          // ── Smart Nudge ─────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(top: 8),
               child: SmartNudge(),
             ),
           ),
 
-          // --- Recent Items ---
+          // ── Recent Items ────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 8),
               child: RecentItems(),
-            ).animate().fadeIn(
-              duration: AppTheme.shortDuration,
-              delay: 150.ms,
-              curve: Curves.easeOut,
-            ).slideY(begin: 0.1),
+            ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
           ),
 
-          // --- Category Grid ---
+          // ── Category Grid ───────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 8),
               child: CategoryGrid(),
-            ).animate().fadeIn(
-              duration: AppTheme.shortDuration,
-              delay: 200.ms,
-              curve: Curves.easeOut,
-            ).slideY(begin: 0.1),
+            ).animate().fadeIn(duration: 400.ms, delay: 250.ms),
           ),
 
-          // Bottom padding for FAB + nav bar
-          const SliverToBoxAdapter(child: SizedBox(height: 90)),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
-      floatingActionButton: AnimatedScale(
-        scale: _isFabVisible ? 1.0 : 0.0,
-        duration: AppTheme.shortDuration,
-        curve: Curves.elasticOut,
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            _showQuickAddSheet(context);
-          },
-          icon: const Icon(Icons.add_rounded),
-          label: const Text(
-            'Tambah Barang',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-          elevation: 4,
-          backgroundColor: const Color(0xFFC5705E),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ).animate().scale(
-          duration: 600.ms,
-          delay: 300.ms,
-          curve: Curves.elasticOut,
-          begin: const Offset(0, 0),
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          _showQuickAddSheet(context);
+        },
+        child: const Icon(Icons.add_rounded),
+      ).animate().scale(
+        duration: 600.ms, delay: 300.ms, curve: Curves.elasticOut, begin: const Offset(0, 0),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

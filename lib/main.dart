@@ -228,7 +228,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3D3229),
+      backgroundColor: const Color(0xFF0F172A),
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnim,
@@ -244,7 +244,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFFD4A06A).withValues(alpha: 0.3),
+                        color: Color(0xFF0D7377).withValues(alpha: 0.4),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -253,7 +253,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: const Icon(
                     Icons.inventory_2,
                     size: 60,
-                    color: Color(0xFFD4A06A),
+                    color: Color(0xFF14A3A8),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -262,7 +262,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFF5F0EB),
+                    color: Colors.white,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -271,7 +271,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   'Ingat semua, temukan segalanya',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFFB8ADA4),
+                    color: Colors.white70,
                   ),
                 ),
               ],
