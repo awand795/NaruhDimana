@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/constants.dart';
 import '../../data/models/category_data.dart';
 import '../../providers/category_provider.dart';
 
@@ -122,7 +123,7 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                 leading: CircleAvatar(
                   backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                   child: Icon(
-                    IconData(cat.iconCodePoint, fontFamily: 'MaterialIcons'),
+                    AppConstants.categoryIconByCodePoint[cat.iconCodePoint] ?? Icons.category,
                     color: AppTheme.primaryColor,
                   ),
                 ),

@@ -228,35 +228,50 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: const Color(0xFF3D3229),
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: ScaleTransition(
             scale: _scaleAnim,
-            child: const Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.inventory_2,
-                  size: 80,
-                  color: Colors.white,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'NaruhDimana',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFFD4A06A).withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2,
+                    size: 60,
+                    color: Color(0xFFD4A06A),
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
+                  'NaruhDimana',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFF5F0EB),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
                   'Ingat semua, temukan segalanya',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white70,
+                    color: Color(0xFFB8ADA4),
                   ),
                 ),
               ],

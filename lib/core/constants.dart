@@ -43,6 +43,40 @@ class AppConstants {
   // Shared Preferences keys
   static const String prefOnboardingComplete = 'onboarding_complete';
   static const String prefUserProfile = 'user_profile';
+
+  // Category icon lookup (codePoint -> IconData) for tree-shaking compatibility
+  static final Map<int, IconData> categoryIconByCodePoint = {
+    Icons.folder.codePoint: Icons.folder,
+    Icons.book.codePoint: Icons.book,
+    Icons.shopping_bag.codePoint: Icons.shopping_bag,
+    Icons.sports_esports.codePoint: Icons.sports_esports,
+    Icons.music_note.codePoint: Icons.music_note,
+    Icons.camera_alt.codePoint: Icons.camera_alt,
+    Icons.watch.codePoint: Icons.watch,
+    Icons.wallet.codePoint: Icons.wallet,
+    Icons.key.codePoint: Icons.key,
+    Icons.phone_android.codePoint: Icons.phone_android,
+    Icons.laptop.codePoint: Icons.laptop,
+    Icons.headphones.codePoint: Icons.headphones,
+    Icons.directions_car.codePoint: Icons.directions_car,
+    Icons.pedal_bike.codePoint: Icons.pedal_bike,
+    Icons.kitchen.codePoint: Icons.kitchen,
+    Icons.chair.codePoint: Icons.chair,
+    Icons.light.codePoint: Icons.light,
+    Icons.pets.codePoint: Icons.pets,
+    Icons.spa.codePoint: Icons.spa,
+    Icons.card_giftcard.codePoint: Icons.card_giftcard,
+    Icons.build.codePoint: Icons.build,
+    Icons.brush.codePoint: Icons.brush,
+    Icons.school.codePoint: Icons.school,
+    Icons.favorite.codePoint: Icons.favorite,
+    Icons.star.codePoint: Icons.star,
+    Icons.home.codePoint: Icons.home,
+    Icons.work.codePoint: Icons.work,
+    Icons.flight.codePoint: Icons.flight,
+    Icons.beach_access.codePoint: Icons.beach_access,
+    Icons.restaurant.codePoint: Icons.restaurant,
+  };
 }
 
 class CategoryInfo {

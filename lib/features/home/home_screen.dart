@@ -89,17 +89,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 gradient: isDark
-                    ? LinearGradient(
+                    ? const LinearGradient(
                         colors: [
-                          const Color(0xFF121420),
-                          const Color(0xFF1A1D2E).withValues(alpha: 0.95),
+                          Color(0xFF1C1815),
+                          Color(0xFF2A2520),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       )
-                    : LinearGradient(
+                    : const LinearGradient(
                         colors: [
-                          AppTheme.primaryColor.withValues(alpha: 0.04),
+                          Color(0xFFF9F5F0),
                           Colors.transparent,
                         ],
                         begin: Alignment.topCenter,
@@ -126,9 +126,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Container(
                             width: 40,
                             height: 40,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white,
+                              color: isDark
+                                  ? const Color(0xFF2A2520)
+                                  : Colors.white,
                             ),
                             child: profile.photoPath != null
                                 ? null
@@ -139,7 +141,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor,
+                                      color: isDark
+                                          ? const Color(0xFFD4836F)
+                                          : AppTheme.primaryColor,
                                     ),
                                   ),
                           ),
@@ -196,11 +200,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: IconButton.styleFrom(
                               backgroundColor: isDark
                                   ? Colors.white.withValues(alpha: 0.06)
-                                  : AppTheme.primaryColor
+                                  : const Color(0xFFC5705E)
                                       .withValues(alpha: 0.06),
                               foregroundColor: isDark
                                   ? Colors.white
-                                  : AppTheme.primaryColor,
+                                  : const Color(0xFFC5705E),
                               minimumSize: const Size(40, 40),
                             ),
                           ),
@@ -212,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               height: 8,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFEF5350),
+                                color: Color(0xFFC26A5E),
                               ),
                             ),
                           ),
@@ -304,6 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
           elevation: 4,
+          backgroundColor: const Color(0xFFC5705E),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),

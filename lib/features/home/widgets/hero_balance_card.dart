@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,30 +29,26 @@ class HeroBalanceCard extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: isDark
             ? const LinearGradient(
-                colors: [Color(0xFF2A2D40), Color(0xFF1E2030)],
+                colors: [Color(0xFF2A2520), Color(0xFF363029)],
               )
             : const LinearGradient(
-                colors: [Color(0xFF4F6AF5), Color(0xFF6C63FF)],
+                colors: [Color(0xFFC5705E), Color(0xFFB8907A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.elevatedShadow(
-          color: isDark ? Colors.black : const Color(0xFF4F6AF5),
-          alpha: isDark ? 0.3 : 0.25,
+          color: isDark ? Colors.black : const Color(0xFFC5705E),
+          alpha: isDark ? 0.3 : 0.2,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(total),
-              const SizedBox(height: 20),
-              _buildStatsRow(reminders, gps, stats),
-            ],
-          ),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(total),
+          const SizedBox(height: 20),
+          _buildStatsRow(reminders, gps, stats, isDark),
+        ],
       ),
     ).animate().shimmer(
       duration: 1500.ms,
@@ -106,7 +101,8 @@ class HeroBalanceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(int reminders, int gps, Map<String, int> stats) {
+  Widget _buildStatsRow(
+      int reminders, int gps, Map<String, int> stats, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -119,21 +115,21 @@ class HeroBalanceCard extends ConsumerWidget {
             icon: Icons.notifications_active_rounded,
             value: '$reminders',
             label: 'Pengingat',
-            color: const Color(0xFFFFC107),
+            color: const Color(0xFFD4A06A),
           ),
           _StatDivider(),
           _StatItem(
             icon: Icons.location_on_rounded,
             value: '$gps',
             label: 'Dengan GPS',
-            color: const Color(0xFF4CAF50),
+            color: const Color(0xFF7C9A7A),
           ),
           _StatDivider(),
           _StatItem(
             icon: Icons.photo_camera_rounded,
             value: '${stats['total'] ?? 0}',
             label: 'Dengan Foto',
-            color: const Color(0xFF64B5F6),
+            color: const Color(0xFFC58B6E),
           ),
         ],
       ),
@@ -150,6 +146,7 @@ class HeroBalanceCard extends ConsumerWidget {
     );
   }
 }
+
 class _StatItem extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -211,4 +208,3 @@ class _StatDivider extends StatelessWidget {
     );
   }
 }
-

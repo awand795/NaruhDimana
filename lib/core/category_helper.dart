@@ -39,7 +39,7 @@ final mergedCategoriesProvider = FutureProvider<List<MergedCategory>>((ref) asyn
   for (final cat in customList) {
     merged.add(MergedCategory(
       name: cat.name,
-      icon: IconData(cat.iconCodePoint, fontFamily: 'MaterialIcons'),
+      icon: AppConstants.categoryIconByCodePoint[cat.iconCodePoint] ?? Icons.category,
       slug: cat.slug,
       isCustom: true,
       color: cat.colorValue != null ? Color(cat.colorValue!) : null,

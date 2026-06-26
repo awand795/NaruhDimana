@@ -85,21 +85,15 @@ class SmartNudge extends ConsumerWidget {
     final total = stats['total'] as int? ?? 0;
     final itemsWithGps = stats['gps'] as int? ?? 0;
 
-    // Prioritas 1: ada pengingat hari ini
     if (reminders > 0) {
       return _NudgeData(
         icon: Icons.notifications_active_rounded,
         message: '$reminders pengingat aktif hari ini. Jangan lupa dicek ya!',
-        color: const Color(0xFFEF9F27),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEF9F27), Color(0xFFFFC107)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.accentColor,
+        gradient: AppTheme.accentGradient,
       );
     }
 
-    // Prioritas 2: Belum ada barang sama sekali
     if (total == 0) {
       return _NudgeData(
         icon: Icons.add_box_rounded,
@@ -109,58 +103,46 @@ class SmartNudge extends ConsumerWidget {
       );
     }
 
-    // Prioritas 3: Pagi hari (6-9), ingatkan barang rutin
     if (hour >= 6 && hour <= 9) {
       return _NudgeData(
         icon: Icons.wb_sunny_rounded,
         message: 'Selamat pagi! Sudah siap bawa barang pentingmu hari ini?',
-        color: const Color(0xFF3B8BD4),
+        color: AppTheme.accentColor,
         gradient: const LinearGradient(
-          colors: [Color(0xFF3B8BD4), Color(0xFF5BA3E8)],
+          colors: [Color(0xFFD4A06A), Color(0xFFE0B889)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       );
     }
 
-    // Prioritas 4: Banyak barang tapi sedikit yang ada lokasi GPS
     if (total > 5 && itemsWithGps < (total / 2)) {
       return _NudgeData(
         icon: Icons.location_on_rounded,
         message: 'Beberapa barangmu belum ada koordinat GPS-nya nih.',
-        color: const Color(0xFF1D9E75),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1D9E75), Color(0xFF43A47A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.secondaryColor,
+        gradient: AppTheme.secondaryGradient,
       );
     }
 
-    // Prioritas 5: Waktunya "Audit" barang (Malam hari 19-22)
     if (hour >= 19 && hour <= 22) {
       return _NudgeData(
         icon: Icons.inventory_rounded,
         message: 'Waktunya audit santai! Masih ingat posisi semua barangmu?',
-        color: Colors.indigo,
+        color: const Color(0xFF7B8BA4),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3F51B5), Color(0xFF5C6BC0)],
+          colors: [Color(0xFF7B8BA4), Color(0xFF9EAEC4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       );
     }
 
-    // Default: Tips acak
     return _NudgeData(
       icon: Icons.lightbulb_outline_rounded,
       message: 'Tips: Tambahkan foto nota pembelian ke barang agar garansi aman.',
-      color: Colors.amber.shade700,
-      gradient: const LinearGradient(
-        colors: [Color(0xFFE65100), Color(0xFFFF8F00)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+      color: AppTheme.accentColor,
+      gradient: AppTheme.accentGradient,
     );
   }
 }

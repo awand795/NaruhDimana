@@ -41,19 +41,19 @@ class QuickActionRow extends StatelessWidget {
           _ActionButton(
             icon: Icons.search_rounded,
             label: 'Cari',
-            color: isDark ? Colors.white : const Color(0xFF4F6AF5),
+            color: isDark ? Colors.white : AppTheme.primaryColor,
             bgColor: isDark
                 ? Colors.white.withValues(alpha: 0.06)
-                : const Color(0xFF4F6AF5).withValues(alpha: 0.06),
+                : AppTheme.primaryColor.withValues(alpha: 0.06),
             onTap: onTapSearch,
           ),
           _ActionButton(
             icon: Icons.map_rounded,
             label: 'Peta',
-            color: isDark ? Colors.white : const Color(0xFF1D9E75),
+            color: isDark ? Colors.white : AppTheme.secondaryColor,
             bgColor: isDark
                 ? Colors.white.withValues(alpha: 0.06)
-                : const Color(0xFF1D9E75).withValues(alpha: 0.06),
+                : AppTheme.secondaryColor.withValues(alpha: 0.06),
             onTap: onTapMap,
           ),
         ],
