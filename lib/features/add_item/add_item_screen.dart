@@ -52,29 +52,39 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     super.dispose();
   }
 
-  Widget _sectionHeader(
-      BuildContext context, String title, IconData icon, int step, int totalSteps) {
+  Widget _sectionHeader(BuildContext context, String title, IconData icon, int step, int totalSteps) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, top: 8),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacingM, top: AppTheme.spacingS),
       child: Row(
         children: [
+          // Icon container with gradient
           Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D7377).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
-            child: Icon(icon, size: 16, color: const Color(0xFF0D7377)),
+            child: Icon(icon, size: 18, color: Colors.white),
           ),
           const SizedBox(width: 10),
-          Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          )),
+          Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const Spacer(),
-          Text(
-            '$step / $totalSteps',
-            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+          // Progress dots
+          Row(
+            children: List.generate(totalSteps, (i) {
+              final isActive = i < step;
+              return AnimatedContainer(
+                duration: AppTheme.shortDuration,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: isActive ? 16 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isActive ? AppTheme.primaryColor : AppTheme.dividerColor,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
           ),
         ],
       ),
@@ -82,29 +92,21 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final status = source == ImageSource.camera 
+    final status = source == ImageSource.camera
         ? await Permission.camera.request()
         : await Permission.photos.request();
-        
     if (!status.isGranted && !status.isLimited) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin diperlukan')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin diperlukan')));
       }
       return;
     }
-
     if (source == ImageSource.camera) {
       final path = await _imageService.pickFromCamera();
-      if (path != null && mounted) {
-        setState(() => _photoPaths.add(path));
-      }
+      if (path != null && mounted) setState(() => _photoPaths.add(path));
     } else {
       final paths = await _imageService.pickMultipleFromGallery();
-      if (paths.isNotEmpty && mounted) {
-        setState(() => _photoPaths.addAll(paths));
-      }
+      if (paths.isNotEmpty && mounted) setState(() => _photoPaths.addAll(paths));
     }
   }
 
@@ -113,40 +115,24 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     try {
       final position = await _locationService.getCurrentPosition();
       if (position != null) {
-        final address = await _locationService.getAddressFromLatLng(
-          position.latitude,
-          position.longitude,
-        );
+        final address = await _locationService.getAddressFromLatLng(position.latitude, position.longitude);
         if (mounted) {
-          setState(() {
-            _latitude = position.latitude;
-            _longitude = position.longitude;
-            _address = address;
-          });
+          setState(() { _latitude = position.latitude; _longitude = position.longitude; _address = address; });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lokasi disimpan: $address'),
-              backgroundColor: const Color(0xFF059669),
-            ),
+            SnackBar(content: Text('Lokasi disimpan: $address'), backgroundColor: const Color(0xFF059669)),
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gagal mendapatkan lokasi. Pastikan GPS aktif.'),
-              backgroundColor: const Color(0xFFDC2626),
-            ),
+            const SnackBar(content: Text('Gagal mendapatkan lokasi. Pastikan GPS aktif.'), backgroundColor: Color(0xFFDC2626)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -163,54 +149,38 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       locale: const Locale('id'),
     );
     if (date == null || !mounted) return;
-
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(
-        DateTime.now().add(const Duration(hours: 1)),
-      ),
+      initialTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))),
     );
     if (time == null || !mounted) return;
-
     final repeatResult = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Ulangi Pengingat'),
         children: AppConstants.reminderRepeatOptions.map((opt) =>
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, opt['value'] as String),
-            child: Text(opt['label'] as String),
-          ),
+          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, opt['value'] as String), child: Text(opt['label'] as String)),
         ).toList(),
       ),
     );
     if (repeatResult == null) return;
-
     setState(() {
-      _selectedReminderTime = DateTime(
-        date.year, date.month, date.day, time.hour, time.minute,
-      );
+      _selectedReminderTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
       _reminderRepeat = repeatResult;
     });
   }
 
   Future<void> _saveItem() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSaving = true);
-
     try {
       final now = DateTime.now().toIso8601String();
       final item = Item(
         name: _nameController.text.trim(),
         location: _locationController.text.trim(),
         category: _selectedCategory,
-        tags: _tagsController.text.trim().isEmpty
-            ? null
-            : _tagsController.text.trim(),
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        tags: _tagsController.text.trim().isEmpty ? null : _tagsController.text.trim(),
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         photoPaths: _photoPaths.isEmpty ? null : _photoPaths,
         photoPath: _photoPaths.isNotEmpty ? _photoPaths.first : null,
         latitude: _latitude,
@@ -221,32 +191,19 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
         createdAt: now,
         updatedAt: now,
       );
-
       final savedId = await ref.read(itemsProvider.notifier).addItem(item);
-
       if (_selectedReminderTime != null) {
         final savedItem = item.copyWith(id: savedId);
         await _notificationService.scheduleNotification(savedItem);
       }
-
       if (mounted) {
         HapticFeedback.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Barang berhasil disimpan!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Barang berhasil disimpan!'), backgroundColor: Colors.green));
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal menyimpan: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e'), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -259,47 +216,58 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       appBar: AppBar(
         title: const Text('Tambah Barang'),
         actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _saveItem,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Simpan'),
-          ),
+          _isSaving
+              ? const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              : Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: ElevatedButton(
+                    onPressed: _saveItem,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  ),
+                ),
         ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacingM),
           children: [
-            // Section 1: Foto
+            // ── Section 1: Foto ──────────────────────────────
             _sectionHeader(context, 'Foto', Icons.camera_alt_outlined, 1, 4),
             SizedBox(
-              height: 100,
+              height: 120,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  // Add button
+                  // Add button with dashed border
                   GestureDetector(
                     onTap: () => _showImagePickerOptions(context),
                     child: Container(
-                      width: 100,
+                      width: 120,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusL),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo_outlined, color: AppTheme.textSecondary),
-                          const SizedBox(height: 4),
-                          Text('Tambah', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                        ],
+                      child: CustomPaint(
+                        painter: _AddItemDashedBorder(color: AppTheme.primaryColor.withValues(alpha: 0.35)),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo_outlined, color: Color(0xFF0D7377), size: 28),
+                            SizedBox(height: 6),
+                            Text('Tambah Foto', style: TextStyle(fontSize: 11, color: Color(0xFF0D7377), fontWeight: FontWeight.w500)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -313,25 +281,33 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                       child: Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.file(
-                              File(path),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                            child: Image.file(File(path), width: 120, height: 120, fit: BoxFit.cover),
+                          ),
+                          // Dark overlay
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.black.withValues(alpha: 0.3), Colors.transparent],
+                                    begin: Alignment.topRight,
+                                    end: Alignment.center,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
+                          // Close button
                           Positioned(
-                            top: 4,
-                            right: 4,
+                            top: 6,
+                            right: 6,
                             child: GestureDetector(
                               onTap: () => setState(() => _photoPaths.removeAt(index)),
                               child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
                                 child: const Icon(Icons.close, color: Colors.white, size: 14),
                               ),
                             ),
@@ -343,12 +319,11 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
 
-            // Section 2: Info barang
+            // ── Section 2: Info barang ───────────────────────
             _sectionHeader(context, 'Info barang', Icons.info_outline_rounded, 2, 4),
 
-            // Item Name
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -356,17 +331,10 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                 hintText: 'Contoh: Kunci Motor Honda',
                 prefixIcon: Icon(Icons.inventory_2),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Nama barang wajib diisi';
-                }
-                return null;
-              },
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama barang wajib diisi' : null,
               textCapitalization: TextCapitalization.sentences,
             ),
-            const SizedBox(height: 16),
-
-            // Storage Location
+            const SizedBox(height: AppTheme.spacingM),
             TextFormField(
               controller: _locationController,
               decoration: const InputDecoration(
@@ -374,91 +342,64 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                 hintText: 'Contoh: Laci meja kamar',
                 prefixIcon: Icon(Icons.location_on_outlined),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Lokasi penyimpanan wajib diisi';
-                }
-                return null;
-              },
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Lokasi penyimpanan wajib diisi' : null,
               textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 20),
 
-            // Category picker — Wrap style like QuickAddSheet
-            Text(
-              'Kategori',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
-            Consumer(
-              builder: (context, ref, _) {
-                final mergedAsync = ref.watch(mergedCategoriesProvider);
-                return mergedAsync.when(
-                  data: (categories) => Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: categories.map((cat) {
-                      final isSelected = _selectedCategory == cat.slug;
-                      final catColor =
-                          AppTheme.getCategoryColor(cat.slug, context);
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => _selectedCategory = cat.slug);
-                        },
+            // Category picker
+            Text('Kategori', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: AppTheme.spacingS),
+            Consumer(builder: (context, ref, _) {
+              final mergedAsync = ref.watch(mergedCategoriesProvider);
+              return mergedAsync.when(
+                data: (categories) => Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: categories.map((cat) {
+                    final isSelected = _selectedCategory == cat.slug;
+                    final catColor = AppTheme.getCategoryColor(cat.slug, context);
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedCategory = cat.slug),
+                      child: AnimatedScale(
+                        scale: isSelected ? 1.05 : 1.0,
+                        duration: const Duration(milliseconds: 150),
                         child: AnimatedContainer(
                           duration: AppTheme.microDuration,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? catColor.withValues(alpha: 0.12)
-                                : Colors.transparent,
+                            color: isSelected ? catColor.withValues(alpha: 0.12) : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: isSelected
-                                  ? catColor
-                                  : AppTheme.textSecondary
-                                      .withValues(alpha: 0.25),
+                              color: isSelected ? catColor : AppTheme.textSecondary.withValues(alpha: 0.25),
                               width: isSelected ? 1.5 : 0.5,
                             ),
                           ),
-                          child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(cat.icon,
-                                    size: 16,
-                                    color: isSelected
-                                        ? catColor
-                                        : AppTheme.textSecondary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  cat.name,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isSelected
-                                        ? catColor
-                                        : AppTheme.textSecondary,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                  ),
-                                ),
-                              ]),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            if (isSelected)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Icon(Icons.check, size: 14, color: catColor),
+                              ),
+                            Icon(cat.icon, size: 16, color: isSelected ? catColor : AppTheme.textSecondary),
+                            const SizedBox(width: 6),
+                            Text(cat.name, style: TextStyle(
+                              fontSize: 13,
+                              color: isSelected ? catColor : AppTheme.textSecondary,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            )),
+                          ]),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                  loading: () => const SizedBox(
-                    height: 44,
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  ),
-                  error: (_, __) => const SizedBox(height: 44),
-                );
-              },
-            ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                loading: () => const SizedBox(height: 44, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                error: (_, __) => const SizedBox(height: 44),
+              );
+            }),
             const SizedBox(height: 20),
 
-            // Tags
             TextFormField(
               controller: _tagsController,
               decoration: const InputDecoration(
@@ -468,63 +409,53 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               ),
               textCapitalization: TextCapitalization.none,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
 
-            // Section 3: Lokasi GPS
+            // ── Section 3: Lokasi GPS ────────────────────────
             _sectionHeader(context, 'Lokasi GPS', Icons.map_outlined, 3, 4),
-            SizedBox(
+
+            Container(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                color: const Color(0xFF0D7377).withValues(alpha: 0.06),
+              ),
+              child: TextButton.icon(
                 onPressed: _isLoadingLocation ? null : _saveLocation,
                 icon: _isLoadingLocation
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? SizedBox(
+                        width: 18, height: 18,
+                        child: _PulseAnimation(
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryColor),
+                        ),
                       )
-                    : Icon(
-                        _latitude != null
-                            ? Icons.location_on
-                            : Icons.add_location,
-                        color: _latitude != null ? Colors.green : null,
-                      ),
+                    : Icon(_latitude != null ? Icons.location_on : Icons.add_location,
+                        color: _latitude != null ? const Color(0xFF059669) : AppTheme.primaryColor),
                 label: Text(
-                  _latitude != null
-                      ? 'Lokasi GPS Tersimpan'
-                      : 'Simpan Lokasi GPS Sekarang',
+                  _latitude != null ? 'Lokasi GPS Tersimpan' : 'Simpan Lokasi GPS Sekarang',
+                  style: TextStyle(color: _latitude != null ? const Color(0xFF059669) : AppTheme.primaryColor),
                 ),
               ),
             ),
             if (_address != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacingS),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFF059669).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
                   border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle,
-                        color: const Color(0xFF059669), size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _address!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: const Color(0xFF047857),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: Row(children: [
+                  Icon(Icons.check_circle, color: const Color(0xFF059669), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(_address!, style: TextStyle(fontSize: 13, color: const Color(0xFF047857)))),
+                ]),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
 
-            // Notes
             TextFormField(
               controller: _notesController,
               decoration: const InputDecoration(
@@ -536,35 +467,28 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
 
-            // Section 4: Pengingat
+            // ── Section 4: Pengingat ────────────────────────
             _sectionHeader(context, 'Pengingat', Icons.alarm_outlined, 4, 4),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: _pickReminderDateTime,
-                icon: Icon(
-                  _selectedReminderTime != null ? Icons.alarm_on : Icons.add_alarm,
-                  color: _selectedReminderTime != null ? Colors.green : null,
-                ),
-                label: Text(
-                  _selectedReminderTime != null
+                icon: Icon(_selectedReminderTime != null ? Icons.alarm_on : Icons.add_alarm,
+                    color: _selectedReminderTime != null ? Colors.green : null),
+                label: Text(_selectedReminderTime != null
                     ? 'Pengingat: ${DateFormat('dd MMM, HH:mm', 'id').format(_selectedReminderTime!)}'
-                    : 'Atur Pengingat (opsional)',
-                ),
+                    : 'Atur Pengingat (opsional)'),
               ),
             ),
             if (_selectedReminderTime != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacingS),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () => setState(() {
-                      _selectedReminderTime = null;
-                      _reminderRepeat = 'none';
-                    }),
+                    onPressed: () => setState(() { _selectedReminderTime = null; _reminderRepeat = 'none'; }),
                     icon: const Icon(Icons.close, size: 16),
                     label: const Text('Hapus pengingat'),
                     style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
@@ -572,30 +496,36 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                 ],
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
 
-            // Save Button
+            // ── Save Button ──────────────────────────────────
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: 56,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveItem,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Simpan Barang',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
+                ).copyWith(
+                  backgroundColor: WidgetStateProperty.resolveWith((_) => null),
+                ),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                  ),
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: _isSaving
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Simpan Barang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacingL),
           ],
         ),
       ),
@@ -605,41 +535,26 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   void _showImagePickerOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Tambahkan Foto',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Tambahkan Foto', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 16),
               ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.camera_alt),
-                ),
+                leading: const CircleAvatar(child: Icon(Icons.camera_alt)),
                 title: const Text('Ambil Foto'),
                 subtitle: const Text('Gunakan kamera'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
               ),
               ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.photo_library),
-                ),
+                leading: const CircleAvatar(child: Icon(Icons.photo_library)),
                 title: const Text('Pilih dari Galeri'),
                 subtitle: const Text('Dari penyimpanan'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
+                onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
               ),
             ],
           ),
@@ -647,4 +562,64 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       ),
     );
   }
+}
+
+// ── Helper: Dashed Border ──────────────────────────────────────
+class _AddItemDashedBorder extends CustomPainter {
+  final Color color;
+  _AddItemDashedBorder({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(1, 1, size.width - 2, size.height - 2), const Radius.circular(16));
+    final path = Path()..addRRect(rrect);
+    final dashed = _dashPath(path, 6, 4);
+    canvas.drawPath(dashed, paint);
+  }
+
+  Path _dashPath(Path source, double dash, double gap) {
+    final dest = Path();
+    for (final metric in source.computeMetrics()) {
+      double d = 0;
+      while (d < metric.length) {
+        final n = d + dash;
+        dest.addPath(metric.extractPath(d, n > metric.length ? metric.length : n), Offset.zero);
+        d = n + gap;
+      }
+    }
+    return dest;
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Helper: Pulse Animation ────────────────────────────────────
+class _PulseAnimation extends StatefulWidget {
+  final Widget child;
+  const _PulseAnimation({required this.child});
+  @override
+  State<_PulseAnimation> createState() => _PulseAnimationState();
+}
+
+class _PulseAnimationState extends State<_PulseAnimation> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(animation: _anim, builder: (_, child) => Transform.scale(scale: _anim.value, child: child), child: widget.child);
 }

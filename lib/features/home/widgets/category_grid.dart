@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,10 +51,7 @@ class CategoryGrid extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 12),
-              child: Text('Kategori', style: Theme.of(context).textTheme.titleMedium),
-            ),
+            Padding(padding: const EdgeInsets.only(left: 4, bottom: 12), child: Text('Kategori', style: Theme.of(context).textTheme.titleMedium)),
             _buildShimmerLoading(),
           ],
         ),
@@ -80,16 +78,9 @@ class CategoryGrid extends ConsumerWidget {
               final i = entry.key;
               final cat = entry.value;
               final count = counts[cat.slug] ?? 0;
-              return SizedBox(
-                width: cardWidth,
-                child: _CategoryCard(category: cat, count: count, index: i),
-              );
+              return SizedBox(width: cardWidth, child: _CategoryCard(category: cat, count: count, index: i));
             }),
-            // Add button as card
-            SizedBox(
-              width: cardWidth,
-              child: _AddCategoryCard(index: sorted.length),
-            ),
+            SizedBox(width: cardWidth, child: _AddCategoryCard(index: sorted.length)),
           ],
         );
       },
@@ -102,19 +93,16 @@ class CategoryGrid extends ConsumerWidget {
       highlightColor: Colors.grey.shade100,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final totalWidth = constraints.maxWidth;
           final gap = 12.0;
-          final cardWidth = (totalWidth - gap) / 2;
+          final cardWidth = (constraints.maxWidth - gap) / 2;
           return Wrap(
             spacing: gap,
             runSpacing: gap,
-            children: List.generate(4, (index) {
-              return Container(
-                width: cardWidth,
-                height: 80,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-              );
-            }),
+            children: List.generate(4, (_) => Container(
+              width: cardWidth,
+              height: 88,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppTheme.radiusL)),
+            )),
           );
         },
       ),
@@ -132,6 +120,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseColor = category.color ?? AppTheme.getCategoryColor(category.slug, context);
+    final catGradient = AppTheme.getCategoryGradient(category.slug);
 
     return GestureDetector(
       onTap: () {
@@ -141,31 +130,28 @@ class _CategoryCard extends StatelessWidget {
       child: Card(
         margin: EdgeInsets.zero,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
         child: Container(
-          height: 80,
+          height: 88,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
             border: Border.all(color: baseColor.withValues(alpha: 0.15), width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
+                // Icon container with gradient background
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [baseColor.withValues(alpha: 0.15), baseColor.withValues(alpha: 0.05)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
+                    gradient: catGradient,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
                   ),
-                  child: Icon(category.icon, color: baseColor, size: 22),
+                  child: Icon(category.icon, color: Colors.white, size: 22),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -175,16 +161,19 @@ class _CategoryCard extends StatelessWidget {
                         category.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '$count barang',
-                        style: TextStyle(fontSize: 11, color: baseColor, fontWeight: FontWeight.w500),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: baseColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '$count barang',
+                          style: TextStyle(fontSize: 10, color: baseColor, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ],
                   ),
@@ -204,7 +193,6 @@ class _CategoryCard extends StatelessWidget {
 
 class _AddCategoryCard extends StatelessWidget {
   final int index;
-
   const _AddCategoryCard({required this.index});
 
   @override
@@ -217,28 +205,60 @@ class _AddCategoryCard extends StatelessWidget {
       child: Card(
         margin: EdgeInsets.zero,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
         child: Container(
-          height: 80,
+          height: 88,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.25), width: 1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
           ),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_circle_outline_rounded, color: Colors.grey, size: 24),
-                SizedBox(height: 4),
-                Text(
-                  'Tambah',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-              ],
+          child: CustomPaint(
+            painter: _DashedBorderPainter(color: const Color(0xFF0D7377).withValues(alpha: 0.4), radius: AppTheme.radiusL),
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_circle_outline_rounded, color: Color(0xFF0D7377), size: 26),
+                  SizedBox(height: 4),
+                  Text('Tambah', style: TextStyle(fontSize: 11, color: Color(0xFF0D7377), fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
           ),
         ),
       ),
     ).animate().fadeIn(duration: 400.ms, delay: (index * 50).ms);
   }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  _DashedBorderPainter({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()..addRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(radius)));
+    final dashedPath = _createDashedPath(path, 6, 4);
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  Path _createDashedPath(Path source, double dashLength, double gapLength) {
+    final dest = Path();
+    for (final metric in source.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final next = distance + dashLength;
+        dest.addPath(metric.extractPath(distance, next > metric.length ? metric.length : next), Offset.zero);
+        distance = next + gapLength;
+      }
+    }
+    return dest;
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -58,7 +58,7 @@ class RecentItems extends ConsumerWidget {
               );
             }
             return SizedBox(
-              height: 180,
+              height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -79,7 +79,7 @@ class RecentItems extends ConsumerWidget {
 
   Widget _buildShimmerLoading() {
     return SizedBox(
-      height: 180,
+      height: 200,
       child: Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
@@ -91,7 +91,7 @@ class RecentItems extends ConsumerWidget {
             return Container(
               width: 160,
               margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppTheme.radiusL)),
             );
           },
         ),
@@ -118,6 +118,7 @@ class _RecentItemCardState extends State<_RecentItemCard> {
   Widget build(BuildContext context) {
     final dateStr = DateFormat('dd MMM').format(DateTime.parse(widget.item.createdAt));
     final catColor = AppTheme.getCategoryColor(widget.category.slug, context);
+    final catGradient = AppTheme.getCategoryGradient(widget.category.slug);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -133,32 +134,65 @@ class _RecentItemCardState extends State<_RecentItemCard> {
         child: Card(
           margin: const EdgeInsets.only(right: 12),
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
           child: SizedBox(
             width: 160,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Foto Area ────────────────────────────────
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusL)),
                   child: Hero(
                     tag: 'item_photo_${widget.item.id}',
                     child: Container(
-                      height: 90,
+                      height: 100,
                       width: double.infinity,
-                      color: catColor.withValues(alpha: 0.1),
-                      child: widget.item.photoPath != null
-                          ? Image.file(
-                              File(widget.item.photoPath!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
-                                child: Icon(widget.category.icon, color: catColor, size: 32),
+                      decoration: BoxDecoration(gradient: catGradient),
+                      child: Stack(
+                        children: [
+                          // Photo or icon
+                          Center(
+                            child: widget.item.photoPath != null
+                                ? Image.file(
+                                    File(widget.item.photoPath!),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    errorBuilder: (_, __, ___) =>
+                                        Icon(widget.category.icon, color: Colors.white, size: 36),
+                                  )
+                                : Icon(widget.category.icon, color: Colors.white, size: 36),
+                          ),
+                          // Category pill badge
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: catColor.withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            )
-                          : Center(child: Icon(widget.category.icon, color: catColor, size: 32)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(widget.category.icon, size: 10, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    widget.category.name,
+                                    style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+                // ── Info ─────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -166,8 +200,8 @@ class _RecentItemCardState extends State<_RecentItemCard> {
                     children: [
                       Text(
                         widget.item.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                        maxLines: 1,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
@@ -180,12 +214,6 @@ class _RecentItemCardState extends State<_RecentItemCard> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(widget.category.icon, size: 12, color: catColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.category.name,
-                            style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w500),
-                          ),
                           const Spacer(),
                           Text(dateStr, style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
                         ],
@@ -196,12 +224,26 @@ class _RecentItemCardState extends State<_RecentItemCard> {
               ],
             ),
           ),
-        ),
+        ).applyBoxShadow(AppTheme.softShadow()),
       ),
     ).animate().fadeIn(
       duration: AppTheme.shortDuration,
       delay: (widget.index * 80).ms,
       curve: Curves.easeOut,
     ).slideX(begin: 0.1);
+  }
+}
+
+extension _BoxShadowExt on Card {
+  Widget applyBoxShadow(List<BoxShadow> shadows) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: shape is RoundedRectangleBorder
+            ? (shape as RoundedRectangleBorder).borderRadius
+            : BorderRadius.circular(16),
+        boxShadow: shadows,
+      ),
+      child: this,
+    );
   }
 }

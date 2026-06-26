@@ -18,11 +18,8 @@ class QuickActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-
     return SizedBox(
-      height: 80,
+      height: 96,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -45,16 +42,14 @@ class QuickActionRow extends StatelessWidget {
             icon: Icons.search_rounded,
             label: 'Cari',
             color: AppTheme.primaryColor,
-            bgColor: bgColor,
-            borderColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+            borderColor: AppTheme.primaryColor.withValues(alpha: 0.3),
             onTap: onTapSearch,
           ),
           _ActionCard(
             icon: Icons.map_rounded,
             label: 'Peta',
             color: const Color(0xFF0EA5E9),
-            bgColor: bgColor,
-            borderColor: const Color(0xFF0EA5E9).withValues(alpha: 0.2),
+            borderColor: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
             onTap: onTapMap,
           ),
         ],
@@ -63,12 +58,11 @@ class QuickActionRow extends StatelessWidget {
   }
 }
 
-class _ActionCard extends StatelessWidget {
+class _ActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
   final LinearGradient? gradient;
   final Color? color;
-  final Color? bgColor;
   final Color? borderColor;
   final Color? shadowColor;
   final VoidCallback? onTap;
@@ -78,59 +72,73 @@ class _ActionCard extends StatelessWidget {
     required this.label,
     this.gradient,
     this.color,
-    this.bgColor,
     this.borderColor,
     this.shadowColor,
     this.onTap,
   });
 
   @override
+  State<_ActionCard> createState() => _ActionCardState();
+}
+
+class _ActionCardState extends State<_ActionCard> with SingleTickerProviderStateMixin {
+  double _scale = 1.0;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: GestureDetector(
-        onTap: () {
+        onTapDown: (_) => setState(() => _scale = 0.92),
+        onTapUp: (_) {
+          setState(() => _scale = 1.0);
           HapticFeedback.selectionClick();
-          onTap?.call();
+          widget.onTap?.call();
         },
-        child: Card(
-          margin: EdgeInsets.zero,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Container(
-            width: 72,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: gradient != null
-                ? BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: AppTheme.softShadow(
-                      color: shadowColor ?? AppTheme.primaryColor,
-                      alpha: 0.2,
-                      blur: 8,
-                      y: 3,
+        onTapCancel: () => setState(() => _scale = 1.0),
+        child: AnimatedScale(
+          scale: _scale,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+          child: SizedBox(
+            width: 80,
+            height: 80,
+            child: Container(
+              decoration: widget.gradient != null
+                  ? BoxDecoration(
+                      gradient: widget.gradient,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                      boxShadow: AppTheme.elevatedShadow(
+                        color: widget.shadowColor ?? AppTheme.primaryColor,
+                        alpha: 0.3,
+                      ),
+                    )
+                  : BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                      border: Border.all(color: widget.borderColor ?? Colors.transparent, width: 1.5),
+                      boxShadow: AppTheme.softShadow(alpha: 0.06),
                     ),
-                  )
-                : BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: borderColor ?? Colors.transparent),
-                    boxShadow: AppTheme.softShadow(alpha: 0.04),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.icon,
+                    color: widget.gradient != null ? Colors.white : widget.color,
+                    size: 28,
                   ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: gradient != null ? Colors.white : color, size: 26),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: gradient != null ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: widget.gradient != null ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

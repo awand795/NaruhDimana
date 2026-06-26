@@ -24,11 +24,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
@@ -68,34 +63,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          // ── Minimal Header ──────────────────────────────────
+          // ── Header ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Row(
                 children: [
-                  // Avatar
+                  // Avatar with gradient ring
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: AppTheme.primaryGradient,
                     ),
-                    child: Center(
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        ),
+                    padding: const EdgeInsets.all(2),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      ),
+                      child: Center(
                         child: profile.photoPath != null
                             ? null
                             : Text(
                                 profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'N',
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryColor,
                                 ),
@@ -110,8 +104,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Text(
                           '${_getGreeting()} 👋',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
+                            fontSize: 20,
                           ),
                         ),
                         Text(
@@ -126,15 +121,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Notif icon
+                  // Notification pill
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.06)
                           : AppTheme.primaryColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.notifications_outlined, size: 20),
@@ -142,6 +137,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: isDark ? Colors.white : AppTheme.primaryColor,
                       padding: EdgeInsets.zero,
                     ),
+                  ).animate(onPlay: (c) => c.repeat(), onComplete: (c) => c.reset()).shimmer(
+                    duration: 2000.ms,
+                    color: AppTheme.primaryColor.withValues(alpha: 0.05),
                   ),
                 ],
               ),
@@ -151,7 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // ── Hero Stats Card ─────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: HeroBalanceCard(statsAsync: statsAsync),
             ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.06),
           ),

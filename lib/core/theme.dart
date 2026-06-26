@@ -26,6 +26,20 @@ class AppTheme {
   static const Color textSecondary  = Color(0xFF64748B); // Slate-500
   static const Color dividerColor   = Color(0xFFE2E8F0); // Slate-200
 
+  // ── Spacing Tokens ───────────────────────────────────────────
+  static const double spacingXS = 4.0;
+  static const double spacingS  = 8.0;
+  static const double spacingM  = 16.0;
+  static const double spacingL  = 24.0;
+  static const double spacingXL = 32.0;
+
+  // ── Border Radius Tokens ─────────────────────────────────────
+  static const double radiusS  = 8.0;
+  static const double radiusM  = 12.0;
+  static const double radiusL  = 16.0;
+  static const double radiusXL = 20.0;
+  static const double radiusXXL = 24.0;
+
   // ── Duration ─────────────────────────────────────────────────
   static const Duration microDuration   = Duration(milliseconds: 150);
   static const Duration shortDuration    = Duration(milliseconds: 250);
@@ -52,6 +66,12 @@ class AppTheme {
 
   static LinearGradient heroGradient = const LinearGradient(
     colors: [Color(0xFF0D7377), Color(0xFF7C3AED)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient cardSubtleGradient = LinearGradient(
+    colors: [Color(0xFFF0FDFA), Color(0xFFFFFFFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -125,6 +145,18 @@ class AppTheme {
       borderRadius: BorderRadius.circular(radius),
       boxShadow: shadows ?? softShadow(),
     );
+  }
+
+  // ── Glow Shadow ──────────────────────────────────────────────
+  static List<BoxShadow> glowShadow(Color color, {double alpha = 0.25}) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: alpha),
+        blurRadius: 20,
+        spreadRadius: -2,
+        offset: const Offset(0, 6),
+      ),
+    ];
   }
 
   // ── Shadows ──────────────────────────────────────────────────

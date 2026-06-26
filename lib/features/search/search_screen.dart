@@ -153,69 +153,64 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ).animate().fadeIn(duration: 300.ms),
             ),
           ),
-          // Glassmorphism search bar
+          // Search bar
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  decoration: _isSearchFocused
-                      ? BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryColor.withValues(alpha: 0.15),
-                              blurRadius: 20,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        )
-                      : AppTheme.glassDecoration(radius: 14),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _focusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Cari nama, lokasi, catatan...',
-                      prefixIcon: Icon(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                    if (_isSearchFocused)
+                      BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.12), blurRadius: 20, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _focusNode,
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama, lokasi, catatan...',
+                    prefixIcon: AnimatedScale(
+                      scale: _isSearchFocused ? 1.1 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
                         Icons.search,
-                        color: _isSearchFocused
-                            ? AppTheme.primaryColor
-                            : AppTheme.textSecondary,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                _performSearch('');
-                                _focusNode.unfocus();
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: _isSearchFocused
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.85),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: _isSearchFocused
-                            ? const BorderSide(color: AppTheme.primaryColor, width: 1.5)
-                            : BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                        color: _isSearchFocused ? AppTheme.primaryColor : AppTheme.textSecondary,
                       ),
                     ),
-                    onChanged: _performSearch,
-                    textInputAction: TextInputAction.search,
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _performSearch('');
+                              _focusNode.unfocus();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isSearchFocused
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.85),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: _isSearchFocused
+                          ? const BorderSide(color: AppTheme.primaryColor, width: 1.5)
+                          : BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                    ),
                   ),
+                  onChanged: _performSearch,
+                  textInputAction: TextInputAction.search,
                 ),
               ),
             ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
@@ -598,20 +593,18 @@ class _FilterChip extends StatelessWidget {
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: iconColor),
+            if (selected) const Icon(Icons.check, size: 14, color: AppTheme.primaryColor),
+            if (!selected) Icon(icon, size: 16, color: iconColor),
             const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(fontSize: 13, color: textColor),
-            ),
+            Text(label, style: TextStyle(fontSize: 13, color: textColor)),
           ],
         ),
         selected: selected,
         onSelected: onSelected,
         selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
         checkmarkColor: AppTheme.primaryColor,
-        backgroundColor: Colors.white,
-        side: BorderSide(color: Colors.grey.shade300),
+        backgroundColor: selected ? AppTheme.primaryColor.withValues(alpha: 0.08) : Colors.white,
+        side: BorderSide(color: selected ? AppTheme.primaryColor : Colors.grey.shade300),
         showCheckmark: false,
       ),
     ).animate().scale(
@@ -688,25 +681,31 @@ class _SearchResultItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
         ),
         child: ListTile(
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: 52,
-              height: 52,
-              color: catColor.withValues(alpha: 0.1),
-              child: item.photoPath != null
-                  ? Image.file(
-                      File(item.photoPath!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Icon(category.icon, color: catColor),
-                    )
-                  : Icon(category.icon, color: catColor),
+          leading: Hero(
+            tag: 'item_thumb_${item.id}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  border: Border.all(color: catColor.withValues(alpha: 0.3), width: 2),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  color: catColor.withValues(alpha: 0.1),
+                ),
+                child: item.photoPath != null
+                    ? Image.file(
+                        File(item.photoPath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(category.icon, color: catColor),
+                      )
+                    : Icon(category.icon, color: catColor),
+              ),
             ),
           ),
           title: Text(
@@ -728,27 +727,21 @@ class _SearchResultItem extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: catColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      category.name,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: catColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    child: Text(category.name, style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w500)),
                   ),
                   const Spacer(),
-                  Text(
-                    _getTimeAgo(),
-                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.access_time, size: 11, color: AppTheme.textSecondary),
+                      const SizedBox(width: 2),
+                      Text(_getTimeAgo(), style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                    ],
                   ),
                 ],
               ),
