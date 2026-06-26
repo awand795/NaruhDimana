@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/router.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../providers/item_provider.dart';
+
 import 'widgets/hero_balance_card.dart';
 import 'widgets/quick_action_row.dart';
 import 'widgets/recent_items.dart';
@@ -22,7 +23,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-
   @override
   void dispose() {
     _scrollController.dispose();
@@ -160,7 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.only(top: 20),
               child: QuickActionRow(
                 onTapAdd: () => _showQuickAddSheet(context),
-                onTapScan: () {},
+                onTapScan: () => Navigator.pushNamed(context, AppRoutes.addItem),
                 onTapSearch: () => Navigator.pushNamed(context, AppRoutes.search),
                 onTapMap: () {},
               ),
