@@ -263,9 +263,9 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo_outlined, color: Color(0xFF0D7377), size: 28),
+                            Icon(Icons.add_a_photo_outlined, color: AppTheme.primaryColor, size: 28),
                             SizedBox(height: 6),
-                            Text('Tambah Foto', style: TextStyle(fontSize: 11, color: Color(0xFF0D7377), fontWeight: FontWeight.w500)),
+                            Text('Tambah Foto', style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
@@ -419,7 +419,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
-                color: const Color(0xFF0D7377).withValues(alpha: 0.06),
+                color: AppTheme.primaryColor.withValues(alpha: 0.06),
               ),
               child: TextButton.icon(
                 onPressed: _isLoadingLocation ? null : _saveLocation,

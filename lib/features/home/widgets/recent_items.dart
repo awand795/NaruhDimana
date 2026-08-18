@@ -23,11 +23,11 @@ class RecentItems extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Baru Ditambahkan', style: Theme.of(context).textTheme.titleMedium),
+              Text('Aktivitas Terbaru', style: Theme.of(context).textTheme.titleMedium),
               GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
@@ -49,19 +49,13 @@ class RecentItems extends ConsumerWidget {
           data: (items) {
             final allCategories = mergedAsync.valueOrNull ?? [];
             if (items.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Belum ada barang. Tambahkan barang pertamamu!',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
-                ),
-              );
+              return _buildEmptyState(context);
             }
             return SizedBox(
               height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final cat = findCategoryBySlugOrFallback(allCategories, items[index].category);
@@ -77,6 +71,63 @@ class RecentItems extends ConsumerWidget {
     );
   }
 
+  Widget _buildEmptyState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: AppTheme.softShadow(),
+        ),
+        child: Column(
+          children: [
+            // Ilustrasi sederhana ala desain Stitch
+            SizedBox(
+              width: 110,
+              height: 110,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.surfaceContainerHigh.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.surfaceContainerHigh,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const Icon(Icons.check_rounded, size: 28, color: AppTheme.outline),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Belum ada aktivitas',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Aktivitas penambahan barang akan muncul di sini.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildShimmerLoading() {
     return SizedBox(
       height: 200,
@@ -85,7 +136,7 @@ class RecentItems extends ConsumerWidget {
         highlightColor: Colors.grey.shade100,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: 3,
           itemBuilder: (context, index) {
             return Container(

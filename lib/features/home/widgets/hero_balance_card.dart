@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme.dart';
+import '../../../providers/item_provider.dart';
+import '../../../data/models/item_model.dart';
 
+/// Hero card Beranda V6 — gradient ocean-indigo→primary,
+/// label "Total Barang", badge pill tren bulan ini, angka besar,
+/// subtitle ringkasan, dan dekorasi gelombang di kanan-bawah.
 class HeroBalanceCard extends ConsumerWidget {
   final AsyncValue<Map<String, int>> statsAsync;
 
@@ -10,126 +14,97 @@ class HeroBalanceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final itemsAsync = ref.watch(itemsProvider);
     return statsAsync.when(
-      data: (stats) => _buildData(context, stats),
+      data: (stats) {
+        final items = itemsAsync.valueOrNull ?? const <Item>[];
+        return _buildData(context, stats, _countAddedThisMonth(items));
+      },
       loading: () => _buildShimmer(),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildData(BuildContext context, Map<String, int> stats) {
+  int _countAddedThisMonth(List<Item> items) {
+    final now = DateTime.now();
+    return items.where((i) {
+      final created = DateTime.tryParse(i.createdAt);
+      return created != null && created.year == now.year && created.month == now.month;
+    }).length;
+  }
+
+  Widget _buildData(BuildContext context, Map<String, int> stats, int addedThisMonth) {
     final total = stats['total'] ?? 0;
     final reminders = stats['reminders'] ?? 0;
     final gps = stats['gps'] ?? 0;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: isDark
-            ? const LinearGradient(
-                colors: [Color(0xFF1E293B), Color(0xFF334155)],
-              )
-            : AppTheme.heroGradient,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        boxShadow: AppTheme.elevatedShadow(
-          color: isDark ? Colors.black : AppTheme.primaryColor,
-          alpha: isDark ? 0.3 : 0.25,
-        ),
+        gradient: AppTheme.heroGradient,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        boxShadow: AppTheme.elevatedShadow(alpha: 0.22),
       ),
-      child: Stack(
-        children: [
-          // Subtle noise texture overlay
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-              child: Opacity(
-                opacity: 0.03,
-                child: CustomPaint(
-                  painter: _NoisePainter(),
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        child: Stack(
+          children: [
+            // Dekorasi gelombang kanan-bawah
+            Positioned(
+              right: -18,
+              bottom: -26,
+              child: CustomPaint(
+                size: const Size(180, 140),
+                painter: _WavePainter(),
               ),
             ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.spacingL),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header ───────────────────────────────────
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Total Barang',
+                        style: TextStyle(
+                          fontSize: 12,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
                       ),
-                      child: const Icon(Icons.inventory_2_rounded, color: Colors.white, size: 24),
+                      const Spacer(),
+                      _TrendBadge(count: addedThisMonth),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    '$total',
+                    style: const TextStyle(
+                      fontSize: 48,
+                      height: 1.0,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -1.5,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Barang',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$total',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tersimpan di $gps lokasi ber-GPS • $reminders pengingat',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spacingL),
-                // ── 3 Mini Stat Cards ──────────────────────────
-                Row(
-                  children: [
-                    Expanded(child: _MiniStatCard(
-                      icon: Icons.notifications_active_rounded,
-                      value: '$reminders',
-                      label: 'Pengingat',
-                      color: const Color(0xFFF59E0B),
-                    )),
-                    const SizedBox(width: 8),
-                    Expanded(child: _MiniStatCard(
-                      icon: Icons.location_on_rounded,
-                      value: '$gps',
-                      label: 'Dengan GPS',
-                      color: const Color(0xFF34D399),
-                    )),
-                    const SizedBox(width: 8),
-                    Expanded(child: _MiniStatCard(
-                      icon: Icons.photo_camera_rounded,
-                      value: '${stats['total'] ?? 0}',
-                      label: 'Dengan Foto',
-                      color: const Color(0xFFA78BFA),
-                    )),
-                  ],
-                ),
-              ],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ).animate().shimmer(
-      duration: 1500.ms,
-      color: Colors.white.withValues(alpha: 0.02),
     );
   }
 
@@ -138,39 +113,34 @@ class HeroBalanceCard extends ConsumerWidget {
       height: 190,
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
       ),
     );
   }
 }
 
-class _MiniStatCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
+class _TrendBadge extends StatelessWidget {
+  final int count;
 
-  const _MiniStatCard({required this.icon, required this.value, required this.label, required this.color});
+  const _TrendBadge({required this.count});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
-      child: Column(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 4),
+          const Icon(Icons.trending_up_rounded, size: 15, color: Colors.white),
+          const SizedBox(width: 4),
           Text(
-            value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3),
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w500),
+            '+$count bulan ini',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ],
       ),
@@ -178,28 +148,28 @@ class _MiniStatCard extends StatelessWidget {
   }
 }
 
-class _NoisePainter extends CustomPainter {
+class _WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white;
-    final random = _SeededRandom(42);
-    for (int i = 0; i < 200; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-      final r = random.nextDouble() * 1.5 + 0.5;
-      canvas.drawCircle(Offset(x, y), r, paint);
-    }
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.58)
+      ..cubicTo(
+        size.width * 0.22,
+        size.height * 0.18,
+        size.width * 0.5,
+        size.height * 0.88,
+        size.width,
+        size.height * 0.38,
+      )
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _SeededRandom {
-  int _seed;
-  _SeededRandom(this._seed);
-  double nextDouble() {
-    _seed = (_seed * 1103515245 + 12345) & 0x7fffffff;
-    return _seed / 0x7fffffff;
-  }
 }

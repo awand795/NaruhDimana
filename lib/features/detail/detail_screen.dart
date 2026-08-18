@@ -229,7 +229,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                                   TileLayer(urlTemplate: AppConstants.mapTileUrl, userAgentPackageName: 'com.naruhdimana.naruh_dimana'),
                                   MarkerLayer(markers: [
                                     Marker(point: LatLng(_item.latitude!, _item.longitude!), width: 40, height: 40,
-                                      child: const Icon(Icons.location_on, color: Color(0xFF0D7377), size: 40)),
+                                      child: const Icon(Icons.location_on, color: AppTheme.primaryColor, size: 40)),
                                   ]),
                                 ],
                               ),
@@ -277,7 +277,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFF0D7377), Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        gradient: const LinearGradient(colors: [AppTheme.primaryColor, Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                         borderRadius: BorderRadius.circular(AppTheme.radiusM),
                       ),
                       child: Row(children: [

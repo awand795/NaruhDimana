@@ -254,7 +254,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFF0D7377).withValues(alpha: 0.4),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.4),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -263,7 +263,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   child: const Icon(
                     Icons.inventory_2,
                     size: 60,
-                    color: Color(0xFF14A3A8),
+                    color: AppTheme.primaryColor,
                   ),
                 ),
                 const SizedBox(height: 20),

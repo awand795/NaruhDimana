@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,8 @@ import '../../../core/theme.dart';
 import '../../../core/category_helper.dart';
 import '../../../core/router.dart';
 
+/// "Kategori Cepat" ala Beranda V6 — scroll horizontal ikon bulat putih
+/// dengan ikon ocean-indigo + label, dan tombol "Lihat Semua".
 class CategoryGrid extends ConsumerWidget {
   const CategoryGrid({super.key});
 
@@ -19,246 +20,126 @@ class CategoryGrid extends ConsumerWidget {
 
     return countsAsync.when(
       data: (counts) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Kategori', style: Theme.of(context).textTheme.titleMedium),
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, AppRoutes.manageCategories),
-                      child: const Text('Lihat Semua', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                ),
-              ),
-              mergedAsync.when(
-                data: (categories) => _buildCardGrid(context, categories, counts),
-                loading: () => _buildShimmerLoading(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(padding: const EdgeInsets.only(left: 4, bottom: 12), child: Text('Kategori', style: Theme.of(context).textTheme.titleMedium)),
-            _buildShimmerLoading(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Kategori Cepat', style: Theme.of(context).textTheme.titleMedium),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.manageCategories),
+                    child: const Text('Lihat Semua', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            mergedAsync.when(
+              data: (categories) => _buildStrip(context, categories, counts),
+              loading: () => _buildShimmerLoading(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
           ],
-        ),
+        );
+      },
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Kategori Cepat', style: Theme.of(context).textTheme.titleMedium),
+          ),
+          const SizedBox(height: 4),
+          _buildShimmerLoading(),
+        ],
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildCardGrid(BuildContext context, List<MergedCategory> categories, Map<String, int> counts) {
-    final sorted = [...categories]..sort((a, b) =>
-        (counts[b.slug] ?? 0).compareTo(counts[a.slug] ?? 0));
+  Widget _buildStrip(BuildContext context, List<MergedCategory> categories, Map<String, int> counts) {
+    final sorted = [...categories]..sort((a, b) => (counts[b.slug] ?? 0).compareTo(counts[a.slug] ?? 0));
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalWidth = constraints.maxWidth;
-        final gap = 12.0;
-        final cardWidth = (totalWidth - gap) / 2;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            ...sorted.asMap().entries.map((entry) {
-              final i = entry.key;
-              final cat = entry.value;
-              final count = counts[cat.slug] ?? 0;
-              return SizedBox(width: cardWidth, child: _CategoryCard(category: cat, count: count, index: i));
-            }),
-            SizedBox(width: cardWidth, child: _AddCategoryCard(index: sorted.length)),
-          ],
-        );
-      },
+    return SizedBox(
+      height: 92,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: sorted.length,
+        itemBuilder: (context, index) => _CategoryIcon(
+          category: sorted[index],
+          index: index,
+        ),
+      ),
     );
   }
 
   Widget _buildShimmerLoading() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final gap = 12.0;
-          final cardWidth = (constraints.maxWidth - gap) / 2;
-          return Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: List.generate(4, (_) => Container(
-              width: cardWidth,
-              height: 88,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppTheme.radiusL)),
-            )),
-          );
-        },
+    return SizedBox(
+      height: 92,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: 5,
+          itemBuilder: (context, index) => Container(
+            width: 72,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _CategoryCard extends StatelessWidget {
+class _CategoryIcon extends StatelessWidget {
   final MergedCategory category;
-  final int count;
   final int index;
 
-  const _CategoryCard({required this.category, required this.count, required this.index});
+  const _CategoryIcon({required this.category, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = category.color ?? AppTheme.getCategoryColor(category.slug, context);
-    final catGradient = AppTheme.getCategoryGradient(category.slug);
-
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         Navigator.pushNamed(context, AppRoutes.search, arguments: category.slug);
       },
-      child: Card(
-        margin: EdgeInsets.zero,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
-        child: Container(
-          height: 88,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-            border: Border.all(color: baseColor.withValues(alpha: 0.15), width: 1),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                // Icon container with gradient background
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: catGradient,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                  ),
-                  child: Icon(category.icon, color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: baseColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$count barang',
-                          style: TextStyle(fontSize: 10, color: baseColor, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: baseColor.withValues(alpha: 0.3), size: 18),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: (index * 50).ms).scale(
-      begin: const Offset(0.95, 0.95),
-      curve: Curves.easeOutBack,
-    );
-  }
-}
-
-class _AddCategoryCard extends StatelessWidget {
-  final int index;
-  const _AddCategoryCard({required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        Navigator.pushNamed(context, AppRoutes.manageCategories);
-      },
-      child: Card(
-        margin: EdgeInsets.zero,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
-        child: Container(
-          height: 88,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-          ),
-          child: CustomPaint(
-            painter: _DashedBorderPainter(color: const Color(0xFF0D7377).withValues(alpha: 0.4), radius: AppTheme.radiusL),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_circle_outline_rounded, color: Color(0xFF0D7377), size: 26),
-                  SizedBox(height: 4),
-                  Text('Tambah', style: TextStyle(fontSize: 11, color: Color(0xFF0D7377), fontWeight: FontWeight.w500)),
-                ],
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                shape: BoxShape.circle,
+                boxShadow: AppTheme.softShadow(alpha: 0.08),
               ),
+              child: Icon(category.icon, size: 24, color: AppTheme.primaryColor),
             ),
-          ),
+            const SizedBox(height: 6),
+            Text(
+              category.name,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: (index * 50).ms);
+    ).animate().fadeIn(duration: 300.ms, delay: (index * 40).ms).slideY(begin: 0.1);
   }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double radius;
-  _DashedBorderPainter({required this.color, required this.radius});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final path = Path()..addRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(radius)));
-    final dashedPath = _createDashedPath(path, 6, 4);
-    canvas.drawPath(dashedPath, paint);
-  }
-
-  Path _createDashedPath(Path source, double dashLength, double gapLength) {
-    final dest = Path();
-    for (final metric in source.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final next = distance + dashLength;
-        dest.addPath(metric.extractPath(distance, next > metric.length ? metric.length : next), Offset.zero);
-        distance = next + gapLength;
-      }
-    }
-    return dest;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

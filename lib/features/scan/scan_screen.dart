@@ -162,10 +162,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               height: 260,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF0D7377), width: 2),
+                border: Border.all(color: AppTheme.primaryColor, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0D7377).withValues(alpha: 0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 30,
                     spreadRadius: 2,
                   ),
@@ -200,7 +200,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Color(0xFF0D7377)),
+                    CircularProgressIndicator(color: AppTheme.primaryColor),
                     SizedBox(height: 16),
                     Text('Memproses...', style: TextStyle(color: Colors.white, fontSize: 16)),
                   ],

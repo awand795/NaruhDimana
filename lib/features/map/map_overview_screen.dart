@@ -148,7 +148,7 @@ class MapOverviewScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Color(0xFF0D7377)),
+                      const Icon(Icons.location_on, size: 16, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
                       Text(
                         '${itemsWithGps.length} barang',
