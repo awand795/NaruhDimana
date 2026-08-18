@@ -35,13 +35,14 @@ Layar yang di-upload:
 
 Arah desain: "Dribbble-style" modern premium — bersih, editorial, penuh karakter, bukan template Material default. Inspirasi: Notion, Locket, Linear, desain shot Dribbble 2025-2026 (large typography, generous whitespace, soft depth, glassmorphism halus, gradient accents halus, micro-interactions).
 
+PALET WARNA: Kamu bebas menentukan palet warna baru sepenuhnya — pilih skema yang kohesif, modern, dan punya karakter kuat (boleh monokromatik + satu aksen, pastel + kontras, atau dark-mode friendly). Tentukan juga peran tiap warna (primary, secondary, accent, background, surface, text) supaya konsisten di semua layar. Jangan terikat warna lama app.
+
 Wajib dipertahankan:
-- Identitas warna teal laut (#0D7377) + aksen violet (#7C3AED) + amber (#D97706) — boleh disempurnakan tapi jangan diganti total.
 - Semua fitur & konten tetap sama (quick actions, kategori, filter, statistik).
 - Bahasa Indonesia di semua label.
 - Layout mobile portrait, satu kolom.
 
-Hasilkan: redesign tiap layar dengan visual konsisten, sistem tipografi (heading/body) yang tegas, spacing rhythm yang jelas, dan komponen reusable (card, chip, button, bottom sheet) yang bisa saya terjemahkan ke Flutter.
+Hasilkan: redesign tiap layar dengan visual konsisten, sistem tipografi (heading/body) yang tegas, spacing rhythm yang jelas, dan komponen reusable (card, chip, button, bottom sheet) yang bisa saya terjemahkan ke Flutter. Sertakan ringkasan palet warna pilihanmu beserta kode hex-nya.
 ```
 
 ---
@@ -60,11 +61,12 @@ Uploaded screens:
 
 Design direction: modern premium "Dribbble-style" — clean, editorial, full of character, not a default Material template. Inspiration: Notion, Locket, Linear, 2025-2026 Dribbble shots (large typography, generous whitespace, soft depth, subtle glassmorphism, subtle gradient accents, micro-interactions).
 
+COLOR PALETTE: You are free to define an entirely new color palette — choose a cohesive, modern scheme with strong character (monochromatic + one accent, pastel + contrast, or dark-mode friendly). Define each color's role (primary, secondary, accent, background, surface, text) so it stays consistent across all screens. Don't feel bound by the app's old colors.
+
 Must keep:
-- Brand identity: ocean teal (#0D7377) + violet accent (#7C3AED) + amber (#D97706) — may be refined, but not replaced entirely.
 - All features & content stay the same (quick actions, categories, filters, stats).
 - Indonesian language on all labels.
 - Mobile portrait, single-column layout.
 
-Deliver: a consistent redesign of every screen, a clear type system (heading/body), a defined spacing rhythm, and reusable components (card, chip, button, bottom sheet) that I can translate into Flutter.
+Deliver: a consistent redesign of every screen, a clear type system (heading/body), a defined spacing rhythm, and reusable components (card, chip, button, bottom sheet) that I can translate into Flutter. Include a summary of your chosen palette with hex codes.
 ```
