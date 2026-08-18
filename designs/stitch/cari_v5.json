@@ -1,0 +1,24 @@
+{
+ "content": [
+  {
+   "type": "text",
+   "text": "{\"name\":\"projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097\",\"title\":\"Cari V5\",\"screenshot\":{\"name\":\"projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097/fileEntries/screenshot\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/AP1WRLsapkpkHa_Py5oGFVElyoM9IWSRH0ATSBXUliU6wwaZ17C-B9k2sk13Ef3PXZ8axYzA9DnizWbk9gVsuHHfn_jVMVzMUB46Z-ZY7voXdazxb6cCD75mvCpW9UmVV_ZtF-JoGWaRX-S-8V3pwLsDK4M1ow2UTED-9pWjH5Wr9bdZ7zXkYVQDXpkRoRGbBgBGbDXaFqMb9uzYMYu78bOpYuLMvUN-3UhNaX9vA9VBWz6zYQN8AwX0krm74X8S\"},\"htmlCode\":{\"name\":\"projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097/fileEntries/html\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1OTRhYjkzY2ZhNWYwMjA3OTI5ZjE4MGI0MDVmEgsSBxD0uumU7QEYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDI2Njg2NjA2OTAwODMyMTU0Nw&filename=&opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"780\",\"height\":\"2308\",\"deviceType\":\"MOBILE\"}"
+  }
+ ],
+ "structuredContent": {
+  "deviceType": "MOBILE",
+  "height": "2308",
+  "htmlCode": {
+   "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1OTRhYjkzY2ZhNWYwMjA3OTI5ZjE4MGI0MDVmEgsSBxD0uumU7QEYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDI2Njg2NjA2OTAwODMyMTU0Nw&filename=&opi=89354086",
+   "mimeType": "text/html",
+   "name": "projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097/fileEntries/html"
+  },
+  "name": "projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097",
+  "screenshot": {
+   "downloadUrl": "https://lh3.googleusercontent.com/aida/AP1WRLsapkpkHa_Py5oGFVElyoM9IWSRH0ATSBXUliU6wwaZ17C-B9k2sk13Ef3PXZ8axYzA9DnizWbk9gVsuHHfn_jVMVzMUB46Z-ZY7voXdazxb6cCD75mvCpW9UmVV_ZtF-JoGWaRX-S-8V3pwLsDK4M1ow2UTED-9pWjH5Wr9bdZ7zXkYVQDXpkRoRGbBgBGbDXaFqMb9uzYMYu78bOpYuLMvUN-3UhNaX9vA9VBWz6zYQN8AwX0krm74X8S",
+   "name": "projects/14266866069008321547/screens/e51fdeafc3d44080bc28b5d8bf93a097/fileEntries/screenshot"
+  },
+  "title": "Cari V5",
+  "width": "780"
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "content": [
+  {
+   "type": "text",
+   "text": "{\"name\":\"projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1\",\"title\":\"Beranda V6\",\"screenshot\":{\"name\":\"projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1/fileEntries/screenshot\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/AP1WRLt2rUBO0o5RQyu-HZnir95VlpMnZfofr3g-z0euRipaGH7uCKl51XelEFxqNiTmPW9aWLu2FG6p9_t3fb8meK6fivLm_Vy9XippyJXjYxTEdImyeGmdxHp07ghOEVGZPIw-HZxcg7KNjONyRZY6SexEGXVnoqT_QqQzAb4m-gDDQTnTykhrOmMlt5zf9IeqDki1N5_RQNTYa3wfd6qUEWm1Y3LQ_D-qqkEkCAZd6chxOuTdoO6RwC12Dxc\"},\"htmlCode\":{\"name\":\"projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1/fileEntries/html\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1OTRhYmU1NmFkOGEwMzgzOWEwZjAxMDE4Y2JkEgsSBxD0uumU7QEYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDI2Njg2NjA2OTAwODMyMTU0Nw&filename=&opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"780\",\"height\":\"2970\",\"deviceType\":\"MOBILE\"}"
+  }
+ ],
+ "structuredContent": {
+  "deviceType": "MOBILE",
+  "height": "2970",
+  "htmlCode": {
+   "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1OTRhYmU1NmFkOGEwMzgzOWEwZjAxMDE4Y2JkEgsSBxD0uumU7QEYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDI2Njg2NjA2OTAwODMyMTU0Nw&filename=&opi=89354086",
+   "mimeType": "text/html",
+   "name": "projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1/fileEntries/html"
+  },
+  "name": "projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1",
+  "screenshot": {
+   "downloadUrl": "https://lh3.googleusercontent.com/aida/AP1WRLt2rUBO0o5RQyu-HZnir95VlpMnZfofr3g-z0euRipaGH7uCKl51XelEFxqNiTmPW9aWLu2FG6p9_t3fb8meK6fivLm_Vy9XippyJXjYxTEdImyeGmdxHp07ghOEVGZPIw-HZxcg7KNjONyRZY6SexEGXVnoqT_QqQzAb4m-gDDQTnTykhrOmMlt5zf9IeqDki1N5_RQNTYa3wfd6qUEWm1Y3LQ_D-qqkEkCAZd6chxOuTdoO6RwC12Dxc",
+   "name": "projects/14266866069008321547/screens/09402d1750e846e4ad5fba774fd938b1/fileEntries/screenshot"
+  },
+  "title": "Beranda V6",
+  "width": "780"
+ }
+}
