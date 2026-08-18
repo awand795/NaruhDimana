@@ -37,10 +37,12 @@ Arah desain: "Dribbble-style" modern premium — bersih, editorial, penuh karakt
 
 PALET WARNA: Kamu bebas menentukan palet warna baru sepenuhnya — pilih skema yang kohesif, modern, dan punya karakter kuat (boleh monokromatik + satu aksen, pastel + kontras, atau dark-mode friendly). Tentukan juga peran tiap warna (primary, secondary, accent, background, surface, text) supaya konsisten di semua layar. Jangan terikat warna lama app.
 
+TATA LETAK: Kamu juga bebas menyusun ulang tata letak tiap layar — jangan terpaku pada struktur yang ada. Silakan ubah hierarki informasi, posisi elemen, grouping, urutan section, dan pola navigasi agar lebih modern dan mudah dipakai (contoh: bottom bar lebih ramping, kartu statistik digabung, quick actions jadi floating pills, kategori jadi horizontal scroll, dsb). Pastikan tiap keputusan layout punya alasan UX yang jelas.
+
 Wajib dipertahankan:
-- Semua fitur & konten tetap sama (quick actions, kategori, filter, statistik).
+- Semua fitur & konten tetap ada (quick actions, kategori, filter, statistik, pencarian, profil, tambah barang) — hanya susunannya yang boleh berubah.
 - Bahasa Indonesia di semua label.
-- Layout mobile portrait, satu kolom.
+- Mobile portrait, satu kolom (kecuali kamu yakin pola lain lebih baik — jelaskan alasannya).
 
 Hasilkan: redesign tiap layar dengan visual konsisten, sistem tipografi (heading/body) yang tegas, spacing rhythm yang jelas, dan komponen reusable (card, chip, button, bottom sheet) yang bisa saya terjemahkan ke Flutter. Sertakan ringkasan palet warna pilihanmu beserta kode hex-nya.
 ```
@@ -63,10 +65,12 @@ Design direction: modern premium "Dribbble-style" — clean, editorial, full of 
 
 COLOR PALETTE: You are free to define an entirely new color palette — choose a cohesive, modern scheme with strong character (monochromatic + one accent, pastel + contrast, or dark-mode friendly). Define each color's role (primary, secondary, accent, background, surface, text) so it stays consistent across all screens. Don't feel bound by the app's old colors.
 
+LAYOUT: You are also free to rearrange the layout of every screen — don't be tied to the existing structure. Feel free to change information hierarchy, element placement, grouping, section order, and navigation patterns to make it more modern and usable (e.g. slimmer bottom bar, merged stat cards, quick actions as floating pills, categories as horizontal scroll, etc.). Justify each layout decision with clear UX reasoning.
+
 Must keep:
-- All features & content stay the same (quick actions, categories, filters, stats).
+- All features & content remain present (quick actions, categories, filters, stats, search, profile, add-item) — only their arrangement may change.
 - Indonesian language on all labels.
-- Mobile portrait, single-column layout.
+- Mobile portrait, single-column layout (unless you are confident another pattern is better — explain why).
 
 Deliver: a consistent redesign of every screen, a clear type system (heading/body), a defined spacing rhythm, and reusable components (card, chip, button, bottom sheet) that I can translate into Flutter. Include a summary of your chosen palette with hex codes.
 ```
