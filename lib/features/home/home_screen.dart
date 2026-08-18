@@ -160,9 +160,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.only(top: 20),
               child: QuickActionRow(
                 onTapAdd: () => _showQuickAddSheet(context),
-                onTapScan: () => Navigator.pushNamed(context, AppRoutes.addItem),
+                onTapScan: () => Navigator.pushNamed(context, AppRoutes.scan),
                 onTapSearch: () => Navigator.pushNamed(context, AppRoutes.search),
-                onTapMap: () {},
+                onTapMap: () => Navigator.pushNamed(context, AppRoutes.mapOverview),
               ),
             ).animate().fadeIn(duration: 400.ms, delay: 150.ms),
           ),

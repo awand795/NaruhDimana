@@ -11,4 +11,6 @@ class AppRoutes {
   static const String about = '/about';
   static const String privacyPolicy = '/privacy-policy';
   static const String editProfile = '/edit-profile';
+  static const String scan = '/scan';
+  static const String mapOverview = '/map-overview';
 }
