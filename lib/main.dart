@@ -37,7 +37,7 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
     ),
   );
 
@@ -180,6 +180,7 @@ class NaruhDimanaApp extends StatelessWidget {
   }
 }
 
+// ── Splash Screen ────────────────────────────────────────────
 class _SplashScreen extends ConsumerStatefulWidget {
   const _SplashScreen();
 
@@ -189,38 +190,53 @@ class _SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<_SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
+  late AnimationController _iconController;
+  late AnimationController _glowController;
+  late Animation<double> _iconScale;
+  late Animation<double> _iconFade;
+  late Animation<double> _glowPulse;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+
+    // Icon entrance animation
+    _iconController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _iconController, curve: Curves.elasticOut),
     );
-    _scaleAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
+    _iconFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
-        parent: _animController,
-        curve: Curves.elasticOut,
+        parent: _iconController,
+        curve: const Interval(0, 0.5, curve: Curves.easeOut),
       ),
     );
-    _animController.forward();
+
+    // Glow pulse animation (infinite)
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+    _glowPulse = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    _iconController.forward();
     _checkOnboarding();
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _iconController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
   Future<void> _checkOnboarding() async {
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -238,55 +254,133 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: ScaleTransition(
-            scale: _scaleAnim,
+      body: Stack(
+        children: [
+          // ── Background gradient orbs ──────────────────────
+          Positioned(
+            top: -120,
+            right: -80,
+            child: Container(
+              width: 320,
+              height: 320,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.primaryColor.withValues(alpha: 0.12),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -100,
+            left: -60,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.accentColor.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Main content ──────────────────────────────────
+          Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.4),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+                // Icon container with gradient + glow
+                FadeTransition(
+                  opacity: _iconFade,
+                  child: ScaleTransition(
+                    scale: _iconScale,
+                    child: AnimatedBuilder(
+                      animation: _glowPulse,
+                      builder: (context, child) {
+                        return Container(
+                          width: 110,
+                          height: 110,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppTheme.primaryGradient,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor
+                                    .withValues(alpha: _glowPulse.value),
+                                blurRadius: 40,
+                                spreadRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: const Icon(
+                        Icons.inventory_2_rounded,
+                        size: 52,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2,
-                    size: 60,
-                    color: AppTheme.primaryColor,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'NaruhDimana',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+                const SizedBox(height: 28),
+
+                // App name
+                FadeTransition(
+                  opacity: _iconFade,
+                  child: const Text(
+                    'NaruhDimana',
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Ingat semua, temukan segalanya',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
+
+                // Tagline
+                FadeTransition(
+                  opacity: _iconFade,
+                  child: Text(
+                    'Ingat semua, temukan segalanya',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+
+          // ── Loading indicator at bottom ───────────────────
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
