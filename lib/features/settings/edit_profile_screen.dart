@@ -13,7 +13,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() =>
+      _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
@@ -35,7 +36,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.text = profile.name;
     _addressController.text = profile.address;
     _hobbiesController.text = profile.hobbies;
-    _ageController.text = profile.age > 0 ? profile.age.toString() : '';
+    _ageController.text =
+        profile.age > 0 ? profile.age.toString() : '';
     _gender = profile.gender;
     _photoPath = profile.photoPath;
   }
@@ -78,7 +80,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -86,13 +88,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Foto Profil',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              ),
+              Text('Foto Profil',
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 16),
               ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.camera_alt)),
+                leading: const CircleAvatar(
+                    child: Icon(Icons.camera_alt)),
                 title: const Text('Ambil Foto'),
                 subtitle: const Text('Gunakan kamera'),
                 onTap: () {
@@ -101,7 +102,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 },
               ),
               ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.photo_library)),
+                leading: const CircleAvatar(
+                    child: Icon(Icons.photo_library)),
                 title: const Text('Pilih dari Galeri'),
                 subtitle: const Text('Dari penyimpanan'),
                 onTap: () {
@@ -130,7 +132,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSaving = true);
 
     final profile = UserProfile(
@@ -142,14 +143,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       photoPath: _photoPath,
     );
 
-    await ref.read(userProfileProvider.notifier).updateProfile(profile);
+    await ref
+        .read(userProfileProvider.notifier)
+        .updateProfile(profile);
 
     if (mounted) {
       HapticFeedback.mediumImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profil berhasil disimpan!'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFF059669),
         ),
       );
       Navigator.pop(context);
@@ -158,78 +161,74 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? const Color(0xFF232936) : AppTheme.surfaceContainerLow;
+    final initial = _nameController.text.isNotEmpty
+        ? _nameController.text[0].toUpperCase()
+        : 'N';
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
+        backgroundColor: bgColor,
         title: const Text('Edit Profil'),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Simpan'),
-          ),
-        ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            // Profile Photo
-            GestureDetector(
-              onTap: _showImagePicker,
-              child: Center(
+            // ── Avatar with gradient ring ──────────────────
+            Center(
+              child: GestureDetector(
+                onTap: _showImagePicker,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     Container(
                       width: 120,
                       height: 120,
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
                         shape: BoxShape.circle,
-                        color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
+                        boxShadow: AppTheme.glowShadow(
+                            AppTheme.primaryColor,
+                            alpha: 0.2),
                       ),
-                      child: _photoPath != null
-                          ? ClipOval(
-                              child: Image.file(
+                      child: ClipOval(
+                        child: _photoPath != null
+                            ? Image.file(
                                 File(_photoPath!),
                                 fit: BoxFit.cover,
-                                width: 120,
-                                height: 120,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: AppTheme.primaryColor,
-                            ),
+                                width: 112,
+                                height: 112,
+                                errorBuilder: (_, __, ___) =>
+                                    _AvatarFallback(
+                                        initial: initial),
+                              )
+                            : _AvatarFallback(initial: initial),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
                           color: AppTheme.primaryColor,
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 18,
-                          color: Colors.white,
-                        ),
+                        child: const Icon(Icons.camera_alt,
+                            size: 18, color: Colors.white),
                       ),
                     ),
                   ],
@@ -238,14 +237,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Nama
-            TextFormField(
+            // ── Name field ────────────────────────────────
+            _LabeledField(
+              label: 'Nama Lengkap',
+              hint: 'Contoh: Awanda Putri',
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Lengkap',
-                hintText: 'Contoh: Awanda Putri',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
               textCapitalization: TextCapitalization.words,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -256,14 +252,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Umur
-            TextFormField(
+            // ── Age field ─────────────────────────────────
+            _LabeledField(
+              label: 'Umur',
+              hint: 'Contoh: 25',
               controller: _ageController,
-              decoration: const InputDecoration(
-                labelText: 'Umur',
-                hintText: 'Contoh: 25',
-                prefixIcon: Icon(Icons.cake_outlined),
-              ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
@@ -275,147 +268,247 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // Jenis Kelamin
-            Text(
-              'Jenis Kelamin',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
+            // ── Gender toggle ─────────────────────────────
+            Text('Jenis Kelamin',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.outline,
+                )),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _gender = 'Laki-laki'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _gender == 'Laki-laki'
-                            ? AppTheme.primaryColor
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: _gender == 'Laki-laki'
-                            ? Border.all(color: AppTheme.primaryColor, width: 2)
-                            : Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.male,
-                            color: _gender == 'Laki-laki'
-                                ? Colors.white
-                                : AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Laki-laki',
-                            style: TextStyle(
-                              color: _gender == 'Laki-laki'
-                                  ? Colors.white
-                                  : AppTheme.onSurface,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: _GenderToggle(
+                    label: 'Laki-laki',
+                    icon: Icons.male_rounded,
+                    selected: _gender == 'Laki-laki',
+                    onTap: () =>
+                        setState(() => _gender = 'Laki-laki'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _gender = 'Perempuan'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _gender == 'Perempuan'
-                            ? AppTheme.primaryColor
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: _gender == 'Perempuan'
-                            ? Border.all(color: AppTheme.primaryColor, width: 2)
-                            : Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.female,
-                            color: _gender == 'Perempuan'
-                                ? Colors.white
-                                : AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Perempuan',
-                            style: TextStyle(
-                              color: _gender == 'Perempuan'
-                                  ? Colors.white
-                                  : AppTheme.onSurface,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: _GenderToggle(
+                    label: 'Perempuan',
+                    icon: Icons.female_rounded,
+                    selected: _gender == 'Perempuan',
+                    onTap: () =>
+                        setState(() => _gender = 'Perempuan'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // Alamat
-            TextFormField(
+            // ── Address field ─────────────────────────────
+            _LabeledField(
+              label: 'Alamat',
+              hint: 'Contoh: Jl. Merdeka No. 123, Jakarta',
               controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Alamat',
-                hintText: 'Contoh: Jl. Merdeka No. 123, Jakarta',
-                prefixIcon: Icon(Icons.location_on_outlined),
-              ),
               textCapitalization: TextCapitalization.sentences,
               maxLines: 2,
             ),
             const SizedBox(height: 16),
 
-            // Hobi
-            TextFormField(
+            // ── Hobbies field ─────────────────────────────
+            _LabeledField(
+              label: 'Hobi',
+              hint: 'Contoh: Membaca, Memasak, Berenang',
               controller: _hobbiesController,
-              decoration: const InputDecoration(
-                labelText: 'Hobi',
-                hintText: 'Contoh: Membaca, Memasak, Berenang',
-                prefixIcon: Icon(Icons.favorite_outline),
-              ),
               textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 32),
 
-            // Save button
+            // ── Save button ───────────────────────────────
             SizedBox(
-              width: double.infinity,
-              height: 52,
+              height: 48,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusM),
+                  ),
+                ),
                 child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white),
+                          ),
+                          SizedBox(width: 10),
+                          Text('Menyimpan...'),
+                        ],
                       )
-                    : const Text(
-                        'Simpan Profil',
-                        style: TextStyle(fontSize: 16),
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.save_outlined, size: 20),
+                          SizedBox(width: 8),
+                          Text('Simpan Profil',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600)),
+                        ],
                       ),
               ),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Avatar fallback ──────────────────────────────────────────
+class _AvatarFallback extends StatelessWidget {
+  final String initial;
+
+  const _AvatarFallback({required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 112,
+      height: 112,
+      decoration: const BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Gender toggle ────────────────────────────────────────────
+class _GenderToggle extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _GenderToggle({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppTheme.shortDuration,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppTheme.primaryColor
+              : (isDark ? const Color(0xFF1E293B) : Colors.white),
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          border: selected
+              ? Border.all(color: AppTheme.primaryColor, width: 2)
+              : Border.all(
+                  color: AppTheme.dividerColor),
+          boxShadow: selected
+              ? AppTheme.softShadow(alpha: 0.15)
+              : AppTheme.softShadow(alpha: 0.03),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                color: selected ? Colors.white : AppTheme.textSecondary),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : AppTheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Labeled field ────────────────────────────────────────────
+class _LabeledField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final String? Function(String?)? validator;
+  final TextCapitalization textCapitalization;
+  final TextInputType? keyboardType;
+  final int maxLines;
+
+  const _LabeledField({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    this.validator,
+    this.textCapitalization = TextCapitalization.none,
+    this.keyboardType,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.outline,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          textCapitalization: textCapitalization,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor:
+                isDark ? const Color(0xFF1E293B) : Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
+          ),
+        ),
+      ],
     );
   }
 }

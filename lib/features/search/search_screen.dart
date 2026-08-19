@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,6 +129,44 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
+  void _showSortPicker() {
+    final currentSort = ref.read(sortByProvider);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Urutkan', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              ...AppConstants.sortOptions.map((opt) {
+                final isSelected = currentSort == opt['value'];
+                return ListTile(
+                  leading: Icon(
+                    isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+                    size: 20,
+                  ),
+                  title: Text(opt['label']!),
+                  onTap: () {
+                    ref.read(sortByProvider.notifier).state = opt['value']!;
+                    Navigator.pop(ctx);
+                    _performSearch(_searchController.text);
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedCategory = ref.watch(selectedCategoryFilterProvider);
@@ -138,176 +177,150 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final hasActiveFilters =
         selectedCategory != null || hasPhoto || hasGps || hasReminder;
+    final isTyping = _searchController.text.isNotEmpty;
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 80,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-              title: Text(
-                'Cari Barang',
-                style: Theme.of(context).textTheme.titleLarge,
-              ).animate().fadeIn(duration: 300.ms),
+            backgroundColor: AppTheme.background.withValues(alpha: 0.85),
+            title: Text(
+              'Cari Barang',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
-          // Search bar
+          // ── Search bar + scanner button ────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: Container(
+                height: 56,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  color: AppTheme.surfaceContainer,
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
                     if (_isSearchFocused)
-                      BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.12), blurRadius: 20, offset: const Offset(0, 4)),
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
                   ],
                 ),
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _focusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama, lokasi, catatan...',
-                    prefixIcon: AnimatedScale(
-                      scale: _isSearchFocused ? 1.1 : 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        Icons.search,
-                        color: _isSearchFocused ? AppTheme.primaryColor : AppTheme.textSecondary,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.search_rounded,
+                      color: _isSearchFocused
+                          ? AppTheme.primaryColor
+                          : AppTheme.outline,
+                      size: 22,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _focusNode,
+                        decoration: const InputDecoration(
+                          hintText: 'Cari barang, lokasi...',
+                          border: InputBorder.none,
+                          filled: false,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                          hintStyle: TextStyle(color: AppTheme.outline),
+                        ),
+                        onChanged: _performSearch,
+                        textInputAction: TextInputAction.search,
                       ),
                     ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              _performSearch('');
-                              _focusNode.unfocus();
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: _isSearchFocused
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.85),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: _isSearchFocused
-                          ? const BorderSide(color: AppTheme.primaryColor, width: 1.5)
-                          : BorderSide.none,
+                    // Scanner button
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        Navigator.pushNamed(context, AppRoutes.scan);
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: _isSearchFocused
+                              ? AppTheme.primaryColor.withValues(alpha: 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.document_scanner_outlined,
+                          color: AppTheme.outline,
+                          size: 22,
+                        ),
+                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-                    ),
-                  ),
-                  onChanged: _performSearch,
-                  textInputAction: TextInputAction.search,
+                  ],
                 ),
               ),
             ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
           ),
-          // Filter chips
+
+          // ── Quick filter pills ─────────────────────────────
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 44,
+              height: 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _FilterChip(
+                  // Sort pill — aktif pertama
+                  _QuickFilterPill(
+                    label: AppConstants.sortOptions
+                        .firstWhere((o) => o['value'] == sortBy)['label']!,
+                    icon: Icons.swap_vert_rounded,
+                    active: sortBy == 'newest',
+                    onTap: _showSortPicker,
+                  ),
+                  const SizedBox(width: 8),
+                  _QuickFilterPill(
                     label: 'Foto',
-                    icon: Icons.image,
-                    selected: hasPhoto,
-                    onSelected: (_) {
+                    icon: Icons.photo_camera_outlined,
+                    active: hasPhoto,
+                    onTap: () {
                       ref.read(hasPhotoFilterProvider.notifier).state = !hasPhoto;
                       _performSearch(_searchController.text);
                     },
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'GPS',
-                    icon: Icons.location_on,
-                    selected: hasGps,
-                    onSelected: (_) {
+                  _QuickFilterPill(
+                    label: 'Lokasi GPS',
+                    icon: Icons.location_on_outlined,
+                    active: hasGps,
+                    onTap: () {
                       ref.read(hasGpsFilterProvider.notifier).state = !hasGps;
                       _performSearch(_searchController.text);
                     },
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  _QuickFilterPill(
+                    label: 'Kategori',
+                    icon: Icons.category_outlined,
+                    active: selectedCategory != null,
+                    onTap: _showCategoryPicker,
+                  ),
+                  const SizedBox(width: 8),
+                  _QuickFilterPill(
                     label: 'Pengingat',
-                    icon: Icons.notifications,
-                    selected: hasReminder,
-                    onSelected: (_) {
+                    icon: Icons.notifications_none_rounded,
+                    active: hasReminder,
+                    onTap: () {
                       ref.read(hasReminderFilterProvider.notifier).state =
                           !hasReminder;
                       _performSearch(_searchController.text);
                     },
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Kategori',
-                    icon: Icons.category,
-                    selected: selectedCategory != null,
-                    onSelected: (_) => _showCategoryPicker(),
-                  ),
-                  const SizedBox(width: 8),
-                  PopupMenuButton<String>(
-                    initialValue: sortBy,
-                    onSelected: (value) {
-                      ref.read(sortByProvider.notifier).state = value;
-                      _performSearch(_searchController.text);
-                    },
-                    itemBuilder: (context) => AppConstants.sortOptions.map(
-                      (opt) => PopupMenuItem(
-                        value: opt['value'],
-                        child: Row(
-                          children: [
-                            if (sortBy == opt['value'])
-                              const Icon(Icons.check, size: 18),
-                            if (sortBy == opt['value'])
-                              const SizedBox(width: 8),
-                            Text(opt['label']!),
-                          ],
-                        ),
-                      ),
-                    ).toList(),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.sort, size: 18),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppConstants.sortOptions.firstWhere(
-                              (o) => o['value'] == sortBy,
-                            )['label']!,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ).animate().fadeIn(duration: 300.ms, delay: 150.ms),
           ),
+
           if (hasActiveFilters)
             SliverToBoxAdapter(
               child: Padding(
@@ -336,6 +349,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
             ),
+
           if (_isLoading)
             const SliverToBoxAdapter(
               child: Center(
@@ -345,7 +359,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
             )
-          else if (_searchController.text.isNotEmpty && _searchResults.isEmpty)
+          else if (isTyping && _searchResults.isEmpty)
             SliverToBoxAdapter(
               child: Center(
                 child: Padding(
@@ -372,7 +386,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
               ),
             )
-          else if (_searchController.text.isNotEmpty)
+          else if (isTyping)
             Consumer(
               builder: (context, ref, _) {
                 final mergedAsync = ref.watch(mergedCategoriesProvider);
@@ -404,34 +418,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               },
             )
           else
-            SliverFillRemaining(
-              hasScrollBody: false,
+            // ── Idle: Riwayat + Kategori Populer + Rekomendasi ──
+            SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.07),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.search_rounded,
-                          size: 36,
-                          color: AppTheme.primaryColor.withValues(alpha: 0.5)),
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Cari barangmu',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 6),
-                    Text('Nama, lokasi, atau catatan',
-                        style: TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 13)),
-                    const SizedBox(height: 24),
-
-                    // Search history
+                    // ── Riwayat Pencarian ─────────────────────
                     Consumer(builder: (ctx, ref, _) {
                       final history = ref.watch(searchHistoryProvider);
                       if (history.isEmpty) return const SizedBox.shrink();
@@ -441,83 +435,215 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Pencarian terakhir',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(
-                                          color: AppTheme.textSecondary)),
+                              Text(
+                                'Riwayat Pencarian',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
                               TextButton(
                                 onPressed: () => ref
                                     .read(searchHistoryProvider.notifier)
                                     .clear(),
-                                child: const Text('Hapus',
-                                    style: TextStyle(fontSize: 12)),
                                 style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                child: const Text('Hapus',
+                                    style: TextStyle(fontSize: 13)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: history
-                                .map((q) => ActionChip(
-                                      avatar: const Icon(Icons.history_rounded,
-                                          size: 14),
-                                      label: Text(q,
-                                          style: const TextStyle(fontSize: 12)),
-                                      onPressed: () {
-                                        _searchController.text = q;
-                                        _performSearch(q);
-                                      },
-                                    ))
-                                .toList(),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardColor,
+                              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                              boxShadow: AppTheme.softShadow(alpha: 0.05),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              children: history.map((q) {
+                                return InkWell(
+                                  onTap: () {
+                                    _searchController.text = q;
+                                    _performSearch(q);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 14),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: AppTheme.surfaceContainer
+                                              .withValues(alpha: 0.7),
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.history_rounded,
+                                            color: AppTheme.outline, size: 20),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            q,
+                                            style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppTheme.onSurface),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        Transform.rotate(
+                                          angle: -math.pi / 4,
+                                          child: const Icon(
+                                            Icons.arrow_upward,
+                                            color: AppTheme.outline,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                         ],
                       );
                     }),
 
-                    // Category quick access
+                    // ── Kategori Populer ──────────────────────
                     Consumer(builder: (ctx, ref, _) {
                       final cats = ref
                               .watch(mergedCategoriesProvider)
                               .valueOrNull ??
                           [];
-                      return Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: cats.take(5).map((cat) {
-                          final color =
-                              AppTheme.getCategoryColor(cat.slug, context);
-                          return ActionChip(
-                            avatar: Icon(cat.icon, size: 14, color: color),
-                            label: Text(cat.name,
-                                style:
-                                    TextStyle(fontSize: 12, color: color)),
-                            backgroundColor: color.withValues(alpha: 0.07),
-                            side: BorderSide(
-                                color: color.withValues(alpha: 0.2),
-                                width: 0.5),
-                            onPressed: () {
-                              ref
-                                  .read(selectedCategoryFilterProvider
-                                      .notifier)
-                                  .state = cat.slug;
-                              _performSearch(' ');
+                      if (cats.isEmpty) return const SizedBox.shrink();
+                      final popular = cats.take(4).toList();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Kategori Populer',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 1.6,
+                            ),
+                            itemCount: popular.length,
+                            itemBuilder: (context, index) {
+                              final cat = popular[index];
+                              final color = AppTheme.getCategoryColor(
+                                  cat.slug, context);
+                              return GestureDetector(
+                                onTap: () {
+                                  ref
+                                      .read(selectedCategoryFilterProvider
+                                          .notifier)
+                                      .state = cat.slug;
+                                  _performSearch(' ');
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.cardColor,
+                                    borderRadius:
+                                        BorderRadius.circular(AppTheme.radiusM),
+                                    boxShadow:
+                                        AppTheme.softShadow(alpha: 0.05),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.12),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(cat.icon,
+                                            color: color, size: 22),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        cat.name,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
                             },
-                          );
-                        }).toList(),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       );
                     }),
+
+                    // ── Rekomendasi ───────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rekomendasi',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            'Dompet Hitam',
+                            'Obat-obatan',
+                            'Tas Ransel',
+                            'Buku Catatan',
+                            'Payung Lipat',
+                          ].map((q) {
+                            return InkWell(
+                              onTap: () {
+                                _searchController.text = q;
+                                _performSearch(q);
+                              },
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  q,
+                                  style: const TextStyle(
+                                      fontSize: 13, color: AppTheme.onSurface),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          const SliverToBoxAdapter(child: SizedBox(height: 90)),
         ],
       ),
     );
@@ -533,7 +659,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -568,44 +694,53 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
+/// Pill filter ala desain cari_v5: rounded-full, bg surface-container
+/// saat off, bg primary saat aktif.
+class _QuickFilterPill extends StatelessWidget {
   final String label;
   final IconData icon;
-  final bool selected;
-  final ValueChanged<bool> onSelected;
+  final bool active;
+  final VoidCallback onTap;
 
-  const _FilterChip({
+  const _QuickFilterPill({
     required this.label,
     required this.icon,
-    required this.selected,
-    required this.onSelected,
+    required this.active,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final Color iconColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
-    final Color textColor = selected ? AppTheme.primaryColor : AppTheme.onSurface;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      child: FilterChip(
-        label: Row(
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppTheme.shortDuration,
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: active ? AppTheme.primaryColor : AppTheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+          boxShadow: active ? AppTheme.softShadow(alpha: 0.2) : null,
+        ),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (selected) const Icon(Icons.check, size: 14, color: AppTheme.primaryColor),
-            if (!selected) Icon(icon, size: 16, color: iconColor),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 13, color: textColor)),
+            Icon(
+              icon,
+              size: 18,
+              color: active ? Colors.white : AppTheme.onSurface,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: active ? Colors.white : AppTheme.onSurface,
+              ),
+            ),
           ],
         ),
-        selected: selected,
-        onSelected: onSelected,
-        selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-        checkmarkColor: AppTheme.primaryColor,
-        backgroundColor: selected ? AppTheme.primaryColor.withValues(alpha: 0.08) : Colors.white,
-        side: BorderSide(color: selected ? AppTheme.primaryColor : Colors.grey.shade300),
-        showCheckmark: false,
       ),
     ).animate().scale(
       duration: 200.ms,

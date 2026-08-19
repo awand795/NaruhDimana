@@ -59,21 +59,30 @@ class ManageCategoriesScreen extends ConsumerStatefulWidget {
   const ManageCategoriesScreen({super.key});
 
   @override
-  ConsumerState<ManageCategoriesScreen> createState() => _ManageCategoriesScreenState();
+  ConsumerState<ManageCategoriesScreen> createState() =>
+      _ManageCategoriesScreenState();
 }
 
-class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen> {
+class _ManageCategoriesScreenState
+    extends ConsumerState<ManageCategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final customAsync = ref.watch(customCategoriesProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? const Color(0xFF0F172A) : AppTheme.surfaceContainerLow;
+    final cardColor =
+        isDark ? const Color(0xFF1E293B) : Colors.white;
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
+        backgroundColor: bgColor,
         title: const Text('Kelola Kategori'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddCategoryDialog(),
+            onPressed: () => _showAddCategoryDialog(cardColor),
           ),
         ],
       ),
@@ -86,24 +95,34 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.category,
-                      size: 64,
-                      color: Colors.grey.shade400,
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryFixed,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.category_outlined,
+                          size: 40, color: AppTheme.onPrimaryFixedVariant),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Text(
                       'Belum ada kategori kustom',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       'Tambahkan kategori buatanmu sendiri',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style:
+                          TextStyle(color: AppTheme.textSecondary),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     ElevatedButton.icon(
-                      onPressed: () => _showAddCategoryDialog(),
+                      onPressed: () =>
+                          _showAddCategoryDialog(cardColor),
                       icon: const Icon(Icons.add),
                       label: const Text('Tambah Kategori'),
                     ),
@@ -113,37 +132,93 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+          return ListView.builder(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
             itemBuilder: (context, index) {
               final cat = categories[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  child: Icon(
-                    AppConstants.categoryIconByCodePoint[cat.iconCodePoint] ?? Icons.category,
-                    color: AppTheme.primaryColor,
+              final icon = AppConstants
+                      .categoryIconByCodePoint[cat.iconCodePoint] ??
+                  Icons.category;
+              final color = cat.colorValue != null
+                  ? Color(cat.colorValue!)
+                  : AppTheme.primaryColor;
+              final isLast = index == categories.length - 1;
+
+              return Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusM),
+                    boxShadow:
+                        AppTheme.softShadow(alpha: 0.04),
                   ),
-                ),
-                title: Text(cat.name),
-                subtitle: Text('slug: ${cat.slug}', style: const TextStyle(fontSize: 12)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => _confirmDelete(cat),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 22, color: color),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(cat.name,
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('Kustom',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondary)),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _confirmDelete(cat),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorContainer
+                                .withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 18,
+                              color: AppTheme.error),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Gagal memuat kategori')),
+        loading: () =>
+            const Center(child: CircularProgressIndicator()),
+        error: (_, __) =>
+            const Center(child: Text('Gagal memuat kategori')),
       ),
     );
   }
 
-  void _showAddCategoryDialog() {
+  void _showAddCategoryDialog(Color cardColor) {
     final nameController = TextEditingController();
     int selectedIconCodePoint = Icons.folder.codePoint;
     Color selectedColor = AppTheme.primaryColor;
@@ -153,6 +228,9 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          ),
           title: const Text('Tambah Kategori'),
           content: SingleChildScrollView(
             child: SizedBox(
@@ -166,21 +244,24 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                     decoration: const InputDecoration(
                       labelText: 'Nama Kategori',
                       hintText: 'Contoh: Elektronik',
-                      prefixIcon: Icon(Icons.label_outline),
                     ),
                     textCapitalization: TextCapitalization.sentences,
                     autofocus: true,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const Text(
                     'Pilih Icon',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 120,
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 6,
                         mainAxisSpacing: 4,
                         crossAxisSpacing: 4,
@@ -188,35 +269,50 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                       itemCount: _categoryIcons.length,
                       itemBuilder: (context, index) {
                         final icon = _categoryIcons[index];
-                        final isSelected = icon.codePoint == selectedIconCodePoint;
+                        final isSelected =
+                            icon.codePoint == selectedIconCodePoint;
                         return GestureDetector(
-                          onTap: () => setDialogState(() => selectedIconCodePoint = icon.codePoint),
+                          onTap: () => setDialogState(
+                              () => selectedIconCodePoint =
+                                  icon.codePoint),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isSelected ? selectedColor.withValues(alpha: 0.15) : Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                              border: isSelected ? Border.all(color: selectedColor, width: 2) : null,
+                              color: isSelected
+                                  ? selectedColor
+                                      .withValues(alpha: 0.15)
+                                  : AppTheme.surfaceContainer,
+                              borderRadius:
+                                  BorderRadius.circular(10),
+                              border: isSelected
+                                  ? Border.all(
+                                      color: selectedColor,
+                                      width: 2)
+                                  : null,
                             ),
-                            child: Icon(
-                              icon,
-                              size: 24,
-                              color: isSelected ? selectedColor : Colors.grey.shade600,
-                            ),
+                            child: Icon(icon,
+                                size: 24,
+                                color: isSelected
+                                    ? selectedColor
+                                    : Colors.grey.shade600),
                           ),
                         );
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const Text(
                     'Pilih Warna',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 80,
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 6,
                         mainAxisSpacing: 8,
                         crossAxisSpacing: 8,
@@ -226,14 +322,23 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                         final color = _categoryColors[index];
                         final isSelected = color == selectedColor;
                         return GestureDetector(
-                          onTap: () => setDialogState(() => selectedColor = color),
+                          onTap: () => setDialogState(
+                              () => selectedColor = color),
                           child: Container(
                             decoration: BoxDecoration(
                               color: color,
                               shape: BoxShape.circle,
-                              border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
+                              border: isSelected
+                                  ? Border.all(
+                                      color: Colors.black,
+                                      width: 2)
+                                  : null,
                             ),
-                            child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                            child: isSelected
+                                ? const Icon(Icons.check,
+                                    color: Colors.white,
+                                    size: 16)
+                                : null,
                           ),
                         );
                       },
@@ -252,21 +357,28 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
               onPressed: isSaving
                   ? null
                   : () async {
-                      final name = nameController.text.trim();
+                      final name =
+                          nameController.text.trim();
                       if (name.isEmpty) return;
 
                       setDialogState(() => isSaving = true);
                       try {
-                        await ref.read(customCategoriesProvider.notifier).addCategory(
+                        await ref
+                            .read(customCategoriesProvider
+                                .notifier)
+                            .addCategory(
                               name,
                               selectedIconCodePoint,
-                              colorValue: selectedColor.toARGB32(),
+                              colorValue:
+                                  selectedColor.toARGB32(),
                             );
                         if (ctx.mounted) Navigator.pop(ctx);
                         HapticFeedback.lightImpact();
                       } catch (e) {
-                        setDialogState(() => isSaving = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        setDialogState(
+                            () => isSaving = false);
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
                           SnackBar(content: Text('Gagal: $e')),
                         );
                       }
@@ -275,7 +387,8 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child:
+                          CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Simpan'),
             ),
@@ -289,8 +402,12 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        ),
         title: const Text('Hapus Kategori'),
-        content: Text('Yakin ingin menghapus kategori "${cat.name}"?'),
+        content:
+            Text('Yakin ingin menghapus kategori "${cat.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -298,7 +415,8 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style:
+                TextButton.styleFrom(foregroundColor: AppTheme.error),
             child: const Text('Hapus'),
           ),
         ],
@@ -306,7 +424,9 @@ class _ManageCategoriesScreenState extends ConsumerState<ManageCategoriesScreen>
     );
 
     if (confirm == true && cat.id != null) {
-      await ref.read(customCategoriesProvider.notifier).deleteCategory(cat.id!);
+      await ref
+          .read(customCategoriesProvider.notifier)
+          .deleteCategory(cat.id!);
       HapticFeedback.mediumImpact();
     }
   }

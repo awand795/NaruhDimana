@@ -12,6 +12,7 @@ import '../../services/location_service.dart';
 import '../../services/notification_service.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
+import '../../core/router.dart';
 import '../../core/category_helper.dart';
 
 class AddItemScreen extends ConsumerStatefulWidget {
@@ -25,21 +26,21 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
-  final _tagsController = TextEditingController();
-  final _notesController = TextEditingController();
 
   final ImageService _imageService = ImageService();
   final LocationService _locationService = LocationService();
   final NotificationService _notificationService = NotificationService();
 
   String _selectedCategory = 'lainnya';
-  List<String> _photoPaths = [];
+  final List<String> _photoPaths = [];
   double? _latitude;
   double? _longitude;
   String? _address;
   bool _isSaving = false;
   bool _isLoadingLocation = false;
 
+  // Toggle state
+  bool _reminderEnabled = false;
   DateTime? _selectedReminderTime;
   String _reminderRepeat = 'none';
 
@@ -47,48 +48,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   void dispose() {
     _nameController.dispose();
     _locationController.dispose();
-    _tagsController.dispose();
-    _notesController.dispose();
     super.dispose();
-  }
-
-  Widget _sectionHeader(BuildContext context, String title, IconData icon, int step, int totalSteps) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacingM, top: AppTheme.spacingS),
-      child: Row(
-        children: [
-          // Icon container with gradient
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Icon(icon, size: 18, color: Colors.white),
-          ),
-          const SizedBox(width: 10),
-          Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const Spacer(),
-          // Progress dots
-          Row(
-            children: List.generate(totalSteps, (i) {
-              final isActive = i < step;
-              return AnimatedContainer(
-                duration: AppTheme.shortDuration,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                width: isActive ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isActive ? AppTheme.primaryColor : AppTheme.dividerColor,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -97,7 +57,8 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
         : await Permission.photos.request();
     if (!status.isGranted && !status.isLimited) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin diperlukan')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Izin diperlukan')));
       }
       return;
     }
@@ -110,27 +71,43 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     }
   }
 
-  Future<void> _saveLocation() async {
+  /// Ambil lokasi GPS saat toggle dinyalakan
+  Future<void> _toggleGps(bool enabled) async {
+    if (!enabled) {
+      setState(() {
+        _latitude = null;
+        _longitude = null;
+        _address = null;
+      });
+      return;
+    }
     setState(() => _isLoadingLocation = true);
     try {
       final position = await _locationService.getCurrentPosition();
-      if (position != null) {
-        final address = await _locationService.getAddressFromLatLng(position.latitude, position.longitude);
+      if (position != null && mounted) {
+        final address = await _locationService.getAddressFromLatLng(
+            position.latitude, position.longitude);
         if (mounted) {
-          setState(() { _latitude = position.latitude; _longitude = position.longitude; _address = address; });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lokasi disimpan: $address'), backgroundColor: const Color(0xFF059669)),
-          );
+          setState(() {
+            _latitude = position.latitude;
+            _longitude = position.longitude;
+            _address = address;
+          });
         }
       } else {
         if (mounted) {
+          setState(() => _latitude = null);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gagal mendapatkan lokasi. Pastikan GPS aktif.'), backgroundColor: Color(0xFFDC2626)),
+            const SnackBar(
+              content: Text('Gagal mendapatkan lokasi. Pastikan GPS aktif.'),
+              backgroundColor: Color(0xFFDC2626),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _latitude = null);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
@@ -140,7 +117,25 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     }
   }
 
-  Future<void> _pickReminderDateTime() async {
+  /// Saat toggle pengingat dinyalakan → pilih tanggal, jam, dan repeat
+  Future<void> _toggleReminder(bool enabled) async {
+    if (!enabled) {
+      setState(() {
+        _reminderEnabled = false;
+        _selectedReminderTime = null;
+        _reminderRepeat = 'none';
+      });
+      return;
+    }
+    final picked = await _pickReminderDateTime();
+    if (picked == null && mounted) {
+      setState(() => _reminderEnabled = false);
+      return;
+    }
+  }
+
+  /// Pilih tanggal + jam + repeat. Kembalikan null jika dibatalkan.
+  Future<DateTime?> _pickReminderDateTime() async {
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(hours: 1)),
@@ -148,26 +143,82 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       locale: const Locale('id'),
     );
-    if (date == null || !mounted) return;
+    if (date == null || !mounted) return null;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 1))),
     );
-    if (time == null || !mounted) return;
+    if (time == null || !mounted) return null;
     final repeatResult = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Ulangi Pengingat'),
-        children: AppConstants.reminderRepeatOptions.map((opt) =>
-          SimpleDialogOption(onPressed: () => Navigator.pop(ctx, opt['value'] as String), child: Text(opt['label'] as String)),
-        ).toList(),
+        children: AppConstants.reminderRepeatOptions
+            .map((opt) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, opt['value'] as String),
+                  child: Text(opt['label'] as String),
+                ))
+            .toList(),
       ),
     );
-    if (repeatResult == null) return;
+    if (repeatResult == null || !mounted) return null;
+
+    final reminderTime =
+        DateTime(date.year, date.month, date.day, time.hour, time.minute);
     setState(() {
-      _selectedReminderTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _reminderEnabled = true;
+      _selectedReminderTime = reminderTime;
       _reminderRepeat = repeatResult;
     });
+    return reminderTime;
+  }
+
+  /// Bottom sheet lokasi terbaru dari barang yang sudah tersimpan
+  Future<void> _showLocationHistory() async {
+    final items = ref.read(itemsProvider).valueOrNull ?? [];
+    final locations = items
+        .map((i) => i.location.trim())
+        .where((l) => l.isNotEmpty)
+        .toSet()
+        .toList();
+    if (locations.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Belum ada lokasi tersimpan')),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text('Lokasi Terbaru',
+                    style: Theme.of(context).textTheme.titleLarge),
+              ),
+              const SizedBox(height: 8),
+              ...locations.map((loc) => ListTile(
+                    leading: const Icon(Icons.history_rounded,
+                        color: AppTheme.outline),
+                    title: Text(loc),
+                    onTap: () {
+                      _locationController.text = loc;
+                      Navigator.pop(ctx);
+                    },
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _saveItem() async {
@@ -179,8 +230,6 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
         name: _nameController.text.trim(),
         location: _locationController.text.trim(),
         category: _selectedCategory,
-        tags: _tagsController.text.trim().isEmpty ? null : _tagsController.text.trim(),
-        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         photoPaths: _photoPaths.isEmpty ? null : _photoPaths,
         photoPath: _photoPaths.isNotEmpty ? _photoPaths.first : null,
         latitude: _latitude,
@@ -198,12 +247,19 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       }
       if (mounted) {
         HapticFeedback.mediumImpact();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Barang berhasil disimpan!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Barang berhasil disimpan!'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e'), backgroundColor: Colors.red),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -212,349 +268,279 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? const Color(0xFF232936) : AppTheme.surfaceContainerLow;
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
+        backgroundColor: bgColor,
         title: const Text('Tambah Barang'),
-        actions: [
-          _isSaving
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                )
-              : Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: ElevatedButton(
-                    onPressed: _saveItem,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  ),
-                ),
-        ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(AppTheme.spacingM),
+          padding: EdgeInsets.zero,
           children: [
-            // ── Section 1: Foto ──────────────────────────────
-            _sectionHeader(context, 'Foto', Icons.camera_alt_outlined, 1, 4),
-            SizedBox(
-              height: 120,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+            // ── Foto tile (aspect 4:3) ───────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: _PhotoTile(
+                photoPaths: _photoPaths,
+                onAdd: () => _showImagePickerOptions(context),
+                onRemove: (index) =>
+                    setState(() => _photoPaths.removeAt(index)),
+              ),
+            ),
+
+            // ── Fields ───────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
                 children: [
-                  // Add button with dashed border
-                  GestureDetector(
-                    onTap: () => _showImagePickerOptions(context),
-                    child: Container(
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                      ),
-                      child: CustomPaint(
-                        painter: _AddItemDashedBorder(color: AppTheme.primaryColor.withValues(alpha: 0.35)),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_a_photo_outlined, color: AppTheme.primaryColor, size: 28),
-                            SizedBox(height: 6),
-                            Text('Tambah Foto', style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
+                  _LabeledField(
+                    label: 'Nama Barang',
+                    hint: 'Contoh: Kamera DSLR Canon',
+                    controller: _nameController,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Nama barang wajib diisi'
+                        : null,
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                  const SizedBox(height: 16),
+                  _LabeledField(
+                    label: 'Lokasi Simpan',
+                    hint: 'Contoh: Lemari Kaca Laci 2',
+                    controller: _locationController,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Lokasi penyimpanan wajib diisi'
+                        : null,
+                    textCapitalization: TextCapitalization.sentences,
+                    suffix: _FieldIconButton(
+                      icon: Icons.history_rounded,
+                      tooltip: 'Pilih lokasi terbaru',
+                      onTap: _showLocationHistory,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // List of images
-                  ..._photoPaths.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final path = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: Stack(
+                ],
+              ),
+            ),
+
+            // ── Kategori pill ────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Kategori',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 12),
+                  Consumer(builder: (context, ref, _) {
+                    final mergedAsync = ref.watch(mergedCategoriesProvider);
+                    return mergedAsync.when(
+                      data: (categories) => Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                            child: Image.file(File(path), width: 120, height: 120, fit: BoxFit.cover),
-                          ),
-                          // Dark overlay
-                          Positioned.fill(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                              child: Container(
+                          ...categories.map((cat) {
+                            final isSelected = _selectedCategory == cat.slug;
+                            return GestureDetector(
+                              onTap: () =>
+                                  setState(() => _selectedCategory = cat.slug),
+                              child: AnimatedContainer(
+                                duration: AppTheme.shortDuration,
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Colors.black.withValues(alpha: 0.3), Colors.transparent],
-                                    begin: Alignment.topRight,
-                                    end: Alignment.center,
-                                  ),
+                                  color: isSelected
+                                      ? AppTheme.primaryColor
+                                      : (isDark
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white),
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusPill),
+                                  boxShadow: isSelected
+                                      ? AppTheme.softShadow(alpha: 0.2)
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      cat.icon,
+                                      size: 16,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppTheme.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      cat.name,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppTheme.onSurface,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ),
-                          // Close button
-                          Positioned(
-                            top: 6,
-                            right: 6,
-                            child: GestureDetector(
-                              onTap: () => setState(() => _photoPaths.removeAt(index)),
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                child: const Icon(Icons.close, color: Colors.white, size: 14),
+                            );
+                          }),
+                          // Tombol tambah kategori
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.manageCategories),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: AppTheme.softShadow(alpha: 0.04),
                               ),
+                              child: const Icon(Icons.add_rounded,
+                                  color: AppTheme.primaryColor, size: 20),
                             ),
                           ),
                         ],
                       ),
+                      loading: () => const SizedBox(
+                        height: 40,
+                        child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2)),
+                      ),
+                      error: (_, __) => const SizedBox(height: 40),
                     );
                   }),
                 ],
               ),
             ),
-            const SizedBox(height: AppTheme.spacingL),
 
-            // ── Section 2: Info barang ───────────────────────
-            _sectionHeader(context, 'Info barang', Icons.info_outline_rounded, 2, 4),
-
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Barang *',
-                hintText: 'Contoh: Kunci Motor Honda',
-                prefixIcon: Icon(Icons.inventory_2),
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama barang wajib diisi' : null,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: AppTheme.spacingM),
-            TextFormField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: 'Lokasi Penyimpanan *',
-                hintText: 'Contoh: Laci meja kamar',
-                prefixIcon: Icon(Icons.location_on_outlined),
-              ),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Lokasi penyimpanan wajib diisi' : null,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 20),
-
-            // Category picker
-            Text('Kategori', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: AppTheme.spacingS),
-            Consumer(builder: (context, ref, _) {
-              final mergedAsync = ref.watch(mergedCategoriesProvider);
-              return mergedAsync.when(
-                data: (categories) => Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: categories.map((cat) {
-                    final isSelected = _selectedCategory == cat.slug;
-                    final catColor = AppTheme.getCategoryColor(cat.slug, context);
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedCategory = cat.slug),
-                      child: AnimatedScale(
-                        scale: isSelected ? 1.05 : 1.0,
-                        duration: const Duration(milliseconds: 150),
-                        child: AnimatedContainer(
-                          duration: AppTheme.microDuration,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected ? catColor.withValues(alpha: 0.12) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: isSelected ? catColor : AppTheme.textSecondary.withValues(alpha: 0.25),
-                              width: isSelected ? 1.5 : 0.5,
-                            ),
-                          ),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [
-                            if (isSelected)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 4),
-                                child: Icon(Icons.check, size: 14, color: catColor),
-                              ),
-                            Icon(cat.icon, size: 16, color: isSelected ? catColor : AppTheme.textSecondary),
-                            const SizedBox(width: 6),
-                            Text(cat.name, style: TextStyle(
-                              fontSize: 13,
-                              color: isSelected ? catColor : AppTheme.textSecondary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            )),
-                          ]),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                loading: () => const SizedBox(height: 44, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-                error: (_, __) => const SizedBox(height: 44),
-              );
-            }),
-            const SizedBox(height: 20),
-
-            TextFormField(
-              controller: _tagsController,
-              decoration: const InputDecoration(
-                labelText: 'Tag (opsional)',
-                hintText: 'Pisahkan dengan koma, contoh: rumah, penting',
-                prefixIcon: Icon(Icons.label_outline),
-              ),
-              textCapitalization: TextCapitalization.none,
-            ),
-            const SizedBox(height: AppTheme.spacingL),
-
-            // ── Section 3: Lokasi GPS ────────────────────────
-            _sectionHeader(context, 'Lokasi GPS', Icons.map_outlined, 3, 4),
-
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
-                color: AppTheme.primaryColor.withValues(alpha: 0.06),
-              ),
-              child: TextButton.icon(
-                onPressed: _isLoadingLocation ? null : _saveLocation,
-                icon: _isLoadingLocation
-                    ? SizedBox(
-                        width: 18, height: 18,
-                        child: _PulseAnimation(
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryColor),
-                        ),
-                      )
-                    : Icon(_latitude != null ? Icons.location_on : Icons.add_location,
-                        color: _latitude != null ? const Color(0xFF059669) : AppTheme.primaryColor),
-                label: Text(
-                  _latitude != null ? 'Lokasi GPS Tersimpan' : 'Simpan Lokasi GPS Sekarang',
-                  style: TextStyle(color: _latitude != null ? const Color(0xFF059669) : AppTheme.primaryColor),
-                ),
-              ),
-            ),
-            if (_address != null) ...[
-              const SizedBox(height: AppTheme.spacingS),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF059669).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                  border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
-                ),
-                child: Row(children: [
-                  Icon(Icons.check_circle, color: const Color(0xFF059669), size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(_address!, style: TextStyle(fontSize: 13, color: const Color(0xFF047857)))),
-                ]),
-              ),
-            ],
-            const SizedBox(height: AppTheme.spacingL),
-
-            TextFormField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
-                hintText: 'Tambahkan catatan tambahan...',
-                prefixIcon: Icon(Icons.note_add_outlined),
-                alignLabelWithHint: true,
-              ),
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: AppTheme.spacingL),
-
-            // ── Section 4: Pengingat ────────────────────────
-            _sectionHeader(context, 'Pengingat', Icons.alarm_outlined, 4, 4),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _pickReminderDateTime,
-                icon: Icon(_selectedReminderTime != null ? Icons.alarm_on : Icons.add_alarm,
-                    color: _selectedReminderTime != null ? Colors.green : null),
-                label: Text(_selectedReminderTime != null
-                    ? 'Pengingat: ${DateFormat('dd MMM, HH:mm', 'id').format(_selectedReminderTime!)}'
-                    : 'Atur Pengingat (opsional)'),
-              ),
-            ),
-            if (_selectedReminderTime != null) ...[
-              const SizedBox(height: AppTheme.spacingS),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+            // ── Toggle cards ─────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+              child: Column(
                 children: [
-                  TextButton.icon(
-                    onPressed: () => setState(() { _selectedReminderTime = null; _reminderRepeat = 'none'; }),
-                    icon: const Icon(Icons.close, size: 16),
-                    label: const Text('Hapus pengingat'),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
+                  _ToggleCard(
+                    icon: Icons.notifications_rounded,
+                    iconBg: AppTheme.secondaryFixed,
+                    iconColor: AppTheme.onSecondaryFixedVariant,
+                    title: 'Set Pengingat',
+                    subtitle: _reminderEnabled && _selectedReminderTime != null
+                        ? '${DateFormat('dd MMM, HH:mm', 'id').format(_selectedReminderTime!)} · ${_repeatLabel()}'
+                        : 'Ingatkan perawatan atau expired',
+                    value: _reminderEnabled,
+                    onChanged: _toggleReminder,
+                  ),
+                  const SizedBox(height: 12),
+                  _ToggleCard(
+                    icon: Icons.location_on_rounded,
+                    iconBg: AppTheme.primaryFixed,
+                    iconColor: AppTheme.onPrimaryFixedVariant,
+                    title: 'Simpan Lokasi GPS',
+                    subtitle: _address ?? 'Tandai lokasi presisi saat ini',
+                    value: _latitude != null,
+                    loading: _isLoadingLocation,
+                    onChanged: _toggleGps,
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: AppTheme.spacingL),
+            ),
 
-            // ── Save Button ──────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveItem,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusL)),
-                ).copyWith(
-                  backgroundColor: WidgetStateProperty.resolveWith((_) => null),
-                ),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+            // ── Tombol Simpan ────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveItem,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    ),
                   ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: _isSaving
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Simpan Barang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
+                  child: _isSaving
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            ),
+                            SizedBox(width: 10),
+                            Text('Menyimpan...'),
+                          ],
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.save_outlined, size: 20),
+                            SizedBox(width: 8),
+                            Text('Simpan Barang',
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.spacingL),
           ],
         ),
       ),
     );
   }
 
+  String _repeatLabel() {
+    for (final opt in AppConstants.reminderRepeatOptions) {
+      if (opt['value'] == _reminderRepeat) return opt['label']!;
+    }
+    return 'Tidak';
+  }
+
   void _showImagePickerOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tambahkan Foto', style: Theme.of(context).textTheme.titleMedium),
+              Text('Tambahkan Foto',
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 16),
               ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.camera_alt)),
                 title: const Text('Ambil Foto'),
                 subtitle: const Text('Gunakan kamera'),
-                onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
               ),
               ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.photo_library)),
                 title: const Text('Pilih dari Galeri'),
                 subtitle: const Text('Dari penyimpanan'),
-                onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
               ),
             ],
           ),
@@ -564,62 +550,323 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
   }
 }
 
-// ── Helper: Dashed Border ──────────────────────────────────────
-class _AddItemDashedBorder extends CustomPainter {
-  final Color color;
-  _AddItemDashedBorder({required this.color});
+// ── Foto tile 4:3 ──────────────────────────────────────────
+class _PhotoTile extends StatelessWidget {
+  final List<String> photoPaths;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onRemove;
+
+  const _PhotoTile({
+    required this.photoPaths,
+    required this.onAdd,
+    required this.onRemove,
+  });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(1, 1, size.width - 2, size.height - 2), const Radius.circular(16));
-    final path = Path()..addRRect(rrect);
-    final dashed = _dashPath(path, 6, 4);
-    canvas.drawPath(dashed, paint);
-  }
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tileColor =
+        isDark ? const Color(0xFF2B3242) : AppTheme.surfaceContainer;
 
-  Path _dashPath(Path source, double dash, double gap) {
-    final dest = Path();
-    for (final metric in source.computeMetrics()) {
-      double d = 0;
-      while (d < metric.length) {
-        final n = d + dash;
-        dest.addPath(metric.extractPath(d, n > metric.length ? metric.length : n), Offset.zero);
-        d = n + gap;
-      }
-    }
-    return dest;
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: onAdd,
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              child: photoPaths.isEmpty
+                  ? Container(
+                      color: tileColor,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF333B4D)
+                                  : AppTheme.surfaceContainerHigh,
+                              shape: BoxShape.circle,
+                              boxShadow: AppTheme.softShadow(alpha: 0.06),
+                            ),
+                            child: const Icon(Icons.add_a_photo_outlined,
+                                size: 28, color: AppTheme.primaryColor),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Ambil Foto Barang',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(color: AppTheme.textSecondary),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'atau pilih dari galeri',
+                            style: TextStyle(
+                                fontSize: 13, color: AppTheme.outline),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(
+                          File(photoPaths.first),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: tileColor,
+                            child: const Icon(Icons.image_outlined,
+                                size: 48, color: AppTheme.outline),
+                          ),
+                        ),
+                        // Overlay ganti foto
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.35),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.center,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt_outlined,
+                                color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+        // Thumbnail strip untuk foto tambahan
+        if (photoPaths.length > 1) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: photoPaths.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isFirst = index == 0;
+                return Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(photoPaths[index]),
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 64,
+                          height: 64,
+                          color: tileColor,
+                        ),
+                      ),
+                    ),
+                    if (!isFirst)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () => onRemove(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close,
+                                color: Colors.white, size: 12),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ── Helper: Pulse Animation ────────────────────────────────────
-class _PulseAnimation extends StatefulWidget {
-  final Widget child;
-  const _PulseAnimation({required this.child});
+// ── Field dengan label di atas ─────────────────────────────
+class _LabeledField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final String? Function(String?)? validator;
+  final TextCapitalization textCapitalization;
+  final Widget? suffix;
+
+  const _LabeledField({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    this.validator,
+    this.textCapitalization = TextCapitalization.none,
+    this.suffix,
+  });
+
   @override
-  State<_PulseAnimation> createState() => _PulseAnimationState();
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.outline,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          textCapitalization: textCapitalization,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: suffix,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _PulseAnimationState extends State<_PulseAnimation> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
+class _FieldIconButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _FieldIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(icon, color: AppTheme.primaryColor),
+      tooltip: tooltip,
+      onPressed: onTap,
+    );
   }
+}
+
+// ── Toggle card ────────────────────────────────────────────
+class _ToggleCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final bool loading;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    this.loading = false,
+    required this.onChanged,
+  });
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(animation: _anim, builder: (_, child) => Transform.scale(scale: _anim.value, child: child), child: widget.child);
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        boxShadow: AppTheme.softShadow(alpha: 0.04),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconBg,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (loading)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: AppTheme.primaryColor,
+            ),
+        ],
+      ),
+    );
+  }
 }

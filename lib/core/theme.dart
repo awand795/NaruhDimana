@@ -37,9 +37,13 @@ class AppTheme {
   static const Color outline                = Color(0xFF727785);
   static const Color outlineVariant         = Color(0xFFC1C6D6);
   static const Color surfaceContainer       = Color(0xFFECEEF1);
+  static const Color surfaceContainerLow    = Color(0xFFF2F3FD);
   static const Color surfaceContainerHigh   = Color(0xFFE6E8F2);
   static const Color secondaryFixed         = Color(0xFFDAE2FF); // container ikon stat
   static const Color onSecondaryFixedVariant = Color(0xFF0040A2);
+  static const Color primaryFixed            = Color(0xFFD8E2FF); // primary-fixed (ikon GPS)
+  static const Color onPrimaryFixedVariant   = Color(0xFF004493);
+  static const Color tertiaryFixed           = Color(0xFFFFDBCB); // tertiary-fixed (ikon dokumen)
   static const Color errorContainer         = Color(0xFFFFDAD6);
   static const Color onErrorContainer       = Color(0xFF93000A);
   static const Color alertCardBg            = Color(0xFFFFF4E5); // kartu "Menunggu Persetujuan"

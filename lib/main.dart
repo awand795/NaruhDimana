@@ -20,8 +20,7 @@ import 'features/settings/manage_categories_screen.dart';
 import 'features/settings/about_screen.dart';
 import 'features/settings/privacy_policy_screen.dart';
 import 'features/search/search_screen.dart';
-import 'features/scan/scan_screen.dart';
-import 'features/map/map_overview_screen.dart';
+import 'features/map_scan/map_scan_screen.dart';
 import 'features/settings/edit_profile_screen.dart';
 import 'data/models/item_model.dart';
 import 'services/notification_service.dart';
@@ -162,11 +161,11 @@ class NaruhDimanaApp extends StatelessWidget {
                 );
               case AppRoutes.scan:
                 return MaterialPageRoute(
-                  builder: (_) => const ScanScreen(),
+                  builder: (_) => const MapScanScreen(initialTab: MapScanTab.scan),
                 );
               case AppRoutes.mapOverview:
                 return MaterialPageRoute(
-                  builder: (_) => const MapOverviewScreen(),
+                  builder: (_) => const MapScanScreen(initialTab: MapScanTab.map),
                 );
               default:
                 return MaterialPageRoute(

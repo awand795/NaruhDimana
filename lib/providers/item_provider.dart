@@ -28,10 +28,17 @@ final itemStatsProvider = FutureProvider<Map<String, int>>((ref) async {
   final total = await repo.getItemCount();
   final reminders = await repo.getItemsWithRemindersCount();
   final gps = await repo.getItemsWithGpsCount();
+  final items = await repo.getAllItems();
+  final locations = items
+      .map((i) => i.location.trim().toLowerCase())
+      .where((l) => l.isNotEmpty)
+      .toSet()
+      .length;
   return {
     'total': total,
     'reminders': reminders,
     'gps': gps,
+    'locations': locations,
   };
 });
 
