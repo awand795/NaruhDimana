@@ -49,13 +49,15 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: isDark ? AppTheme.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: AppTheme.softShadow(alpha: 0.1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -115,41 +117,43 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                             HapticFeedback.selectionClick();
                           },
                           child: AnimatedContainer(
-                            duration: AppTheme.microDuration,
+                            duration: AppTheme.shortDuration,
+                            height: 36,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                                horizontal: 14),
                             decoration: BoxDecoration(
                               color: sel
-                                  ? color.withValues(alpha: 0.12)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: sel
-                                    ? color
-                                    : AppTheme.textSecondary
-                                        .withValues(alpha: 0.25),
-                                width: sel ? 1.5 : 0.5,
-                              ),
+                                  ? AppTheme.primaryColor
+                                  : (isDark
+                                      ? AppTheme.darkSurfaceHighest
+                                      : AppTheme.surfaceContainer),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusPill),
+                              boxShadow: sel
+                                  ? AppTheme.softShadow(alpha: 0.2)
+                                  : null,
                             ),
-                            child:
-                                Row(mainAxisSize: MainAxisSize.min, children: [
-                              Icon(cat.icon,
-                                  size: 14,
-                                  color:
-                                      sel ? color : AppTheme.textSecondary),
-                              const SizedBox(width: 6),
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: sel
-                                      ? color
-                                      : AppTheme.textSecondary,
-                                  fontWeight:
-                                      sel ? FontWeight.w600 : FontWeight.w400,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(cat.icon,
+                                    size: 15,
+                                    color: sel
+                                        ? Colors.white
+                                        : AppTheme.textSecondary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  cat.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: sel
+                                        ? Colors.white
+                                        : AppTheme.onSurface,
+                                  ),
                                 ),
-                              ),
-                            ]),
+                              ],
+                            ),
                           ),
                         );
                       }).toList(),

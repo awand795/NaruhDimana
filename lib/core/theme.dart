@@ -49,6 +49,15 @@ class AppTheme {
   static const Color alertCardBg            = Color(0xFFFFF4E5); // kartu "Menunggu Persetujuan"
   static const Color alertCardIconBg        = Color(0x33FFB74D); // #FFB74D/20
 
+  // ── Semantic Colors (snackbar, alerts) ──────────────────────
+  static const Color successColor           = Color(0xFF059669); // emerald-600
+  static const Color errorDark              = Color(0xFFDC2626); // red-600
+  static const Color darkBg                 = Color(0xFF0F172A); // navy-900
+  static const Color darkSurface            = Color(0xFF1E293B); // slate-800
+  static const Color darkSurfaceHigh        = Color(0xFF232936); // slate-850
+  static const Color darkSurfaceHigher      = Color(0xFF2B3242); // slate-900
+  static const Color darkSurfaceHighest     = Color(0xFF333B4D); // slate-950
+
   // ── Spacing Tokens (8px scale) ──────────────────────────────
   static const double spacingXS = 4.0;
   static const double spacingS  = 8.0;

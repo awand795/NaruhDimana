@@ -179,12 +179,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         selectedCategory != null || hasPhoto || hasGps || hasReminder;
     final isTyping = _searchController.text.isNotEmpty;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppTheme.darkBg : AppTheme.background;
+
     return Scaffold(
+      backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
-            backgroundColor: AppTheme.background.withValues(alpha: 0.85),
+            backgroundColor: bgColor.withValues(alpha: 0.85),
             title: Text(
               'Cari Barang',
               style: Theme.of(context).textTheme.titleLarge,
@@ -198,7 +202,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 height: 56,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                  color: AppTheme.surfaceContainer,
+                  color: isDark ? AppTheme.darkSurfaceHighest : AppTheme.surfaceContainer,
                   boxShadow: [
                     if (_isSearchFocused)
                       BoxShadow(
@@ -247,7 +251,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           color: _isSearchFocused
                               ? AppTheme.primaryColor.withValues(alpha: 0.1)
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
                         ),
                         child: const Icon(
                           Icons.document_scanner_outlined,
@@ -366,7 +370,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   padding: const EdgeInsets.all(48),
                   child: Column(
                     children: [
-                      Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.search_off, size: 64, color: AppTheme.outline),
                       const SizedBox(height: 16),
                       Text(
                         'Barang tidak ditemukan',
@@ -620,13 +624,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 _searchController.text = q;
                                 _performSearch(q);
                               },
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusS),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(10),
+                                  color: isDark ? AppTheme.darkSurfaceHighest : AppTheme.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
                                 ),
                                 child: Text(
                                   q,
